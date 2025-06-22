@@ -1,0 +1,21 @@
+# OS・エディタ固有
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+
+# npm/node関連
+node_modules/
+
+# ログ・一時ファイル
+*.log
+*.tmp
+
+# その他
+.env
+*.bak
+
+# アイコン出力例
+*.png
+*.jpg
