@@ -1,0 +1,70 @@
+body {
+  min-width: 500px;
+  min-height: 300px;
+  font-family: sans-serif;
+  background: #f8f8f8;
+  margin: 0;
+  padding: 1em;
+}
+h1 {
+  font-size: 1.2em;
+  margin-bottom: 1em;
+}
+form {
+  margin-bottom: 1em;
+}
+#status {
+  color: green;
+}
+.options-container {
+  display: flex;
+  gap: 2em;
+}
+.rule-list-section {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.rule-list-section label {
+  margin-bottom: 0.5em;
+}
+#ruleList {
+  margin-bottom: 0.5em;
+}
+.rule-edit-section {
+  flex: 1;
+}
+#ruleForm label {
+  display: block;
+  margin-bottom: 0.5em;
+}
+#ruleForm input {
+  width: 100%;
+  box-sizing: border-box;
+}
+#ruleStatus {
+  color: green;
+  margin-top: 0.5em;
+}
+.history-section {
+  margin-top: 2em;
+}
+.history-section h2 {
+  font-size: 1em;
+  margin-bottom: 0.5em;
+}
+#downloadHistoryTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+#downloadHistoryTable th, #downloadHistoryTable td {
+  border: 1px solid #ccc;
+  padding: 0.3em 0.5em;
+  font-size: 0.95em;
+  word-break: break-all;
+}
+#downloadHistoryTable th {
+  background: #f0f0f0;
+}

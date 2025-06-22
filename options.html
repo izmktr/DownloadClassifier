@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>DownloadClassifier オプション</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <h1>DownloadClassifier オプション</h1>
+  <div class="options-container">
+    <div class="rule-list-section">
+      <label>ルール一覧:</label>
+      <select id="ruleList" size="10" style="width:180px;"></select>
+      <button id="addRuleBtn" type="button">追加</button>
+      <button id="deleteRuleBtn" type="button">削除</button>
+    </div>
+    <div class="rule-edit-section">
+      <form id="ruleForm">
+        <label>ルール名:<br><input type="text" id="ruleName" required></label><br>
+        <label>フォルダ:<br><input type="text" id="ruleFolder" required></label><br>
+        <label>URLパターン:<br><input type="text" id="ruleUrlPattern" required></label><br>
+        <label>MIMEパターン:<br><input type="text" id="ruleMimePattern"></label><br>
+        <label>ファイルパターン:<br><input type="text" id="ruleFilePattern"></label><br>
+        <button type="submit">保存</button>
+      </form>
+      <div id="ruleStatus"></div>
+    </div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
