@@ -2,30 +2,55 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>DownloadClassifier オプション</title>
+  <title>拡張機能の設定</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <h1>DownloadClassifier オプション</h1>
-  <div class="options-container">
-    <div class="rule-list-section">
-      <label>ルール一覧:</label>
-      <select id="ruleList" size="10" style="width:180px;"></select>
-      <button id="addRuleBtn" type="button">追加</button>
-      <button id="deleteRuleBtn" type="button">削除</button>
-    </div>
-    <div class="rule-edit-section">
-      <form id="ruleForm">
-        <label>ルール名:<br><input type="text" id="ruleName" required></label><br>
-        <label>フォルダ:<br><input type="text" id="ruleFolder" required></label><br>
-        <label>URLパターン:<br><input type="text" id="ruleUrlPattern" required></label><br>
-        <label>MIMEパターン:<br><input type="text" id="ruleMimePattern"></label><br>
-        <label>ファイルパターン:<br><input type="text" id="ruleFilePattern"></label><br>
-        <button type="submit">保存</button>
-      </form>
-      <div id="ruleStatus"></div>
-    </div>
-  </div>
+  <h1>拡張機能の設定</h1>
+  <form id="optionsForm">
+    <fieldset>
+      <legend>ルール</legend>
+      <div style="display: flex; gap: 24px;">
+        <!-- 左：ルール一覧リストボックス -->
+        <div>
+          <label for="rulesListBox">ルール一覧</label><br>
+          <select id="rulesListBox" size="8" style="min-width: 160px;"></select>
+          <br>
+          <button type="button" id="moveUpRuleBtn">↑</button>
+          <button type="button" id="moveDownRuleBtn">↓</button>
+          <button type="button" id="deleteRuleBtn">削除</button>
+        </div>
+        <!-- 右：ルール詳細入力 -->
+        <div>
+          <label>ルール名<br>
+            <input type="text" id="ruleName" placeholder="ルール名">
+          </label><br>
+          <label>移動先フォルダ<br>
+            <input type="text" id="sendFolder" placeholder="移動先フォルダ">
+          </label><br>
+          <label>urlパターン<br>
+            <input type="text" id="urlPattern" placeholder="urlパターン">
+          </label><br>
+          <label>ファイルパターン<br>
+            <input type="text" id="filePattern" placeholder="ファイルパターン">
+          </label><br>
+          <label>mimeタイプ<br>
+            <input type="text" id="mime" placeholder="例: image/png">
+          </label><br>
+          <button type="button" id="addOrUpdateRuleBtn">追加/更新</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <span id="status"></span>
+  </form>
+
+  <h2>保存内容（Rawデータ）</h2>
+  <pre id="rawData" style="background:#f4f4f4; padding:8px; border:1px solid #ccc; max-width:100%; overflow:auto;"></pre>
+
+  <h2>過去のダウンロード情報</h2>
+  <ul id="downloadHistory" style="background:#f9f9f9; padding:8px; border:1px solid #ccc; max-width:100%; overflow:auto;"></ul>
+
   <script src="options.js"></script>
 </body>
 </html>
