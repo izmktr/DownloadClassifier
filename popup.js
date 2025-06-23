@@ -51,3 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+document.getElementById('show-options').addEventListener('click', () => {
+  chrome.runtime.openOptionsPage();
+});
+
