@@ -3,22 +3,25 @@
   "name": "DownloadClassifier",
   "version": "1.0.0",
   "description": "ダウンロードを分類するChrome拡張機能の雛形です。",
-  "permissions": ["downloads"],
+  "permissions": [
+    "downloads",
+    "storage"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
+      "16": "icon/icon16.png",
+      "48": "icon/icon48.png",
+      "128": "icon/icon128.png"
     }
   },
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "icon/icon16.png",
+    "48": "icon/icon48.png",
+    "128": "icon/icon128.png"
   },
   "options_page": "options.html"
 }
