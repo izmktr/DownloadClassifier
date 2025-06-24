@@ -12,8 +12,11 @@
   "mime": { "message": "MIME Type" },
   "addOrUpdate": { "message": "Add/Update" },
   "add": { "message": "Add" },
+  "update": { "message": "Update" },
   "status": { "message": "Saved Data (Raw)" },
   "downloadHistory": { "message": "Download History" },
   "popupTitle": { "message": "Popup" },
-  "showOptions": { "message": "Show Options" }
+  "showOptions": { "message": "Show Options" },
+  "newRule": { "message": "New Rule" },
+  "test": { "message": "Test" }
 }
