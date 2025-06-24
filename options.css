@@ -1,0 +1,19 @@
+body {
+  font-family: sans-serif;
+  background: #f8f8f8;
+  margin: 0;
+  padding: 1em;
+}
+fieldset {
+  border: 1px solid #ccc;
+  padding: 1em;
+}
+label {
+  display: block;
+  margin-bottom: 0.5em;
+}
+input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+}

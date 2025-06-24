@@ -38,6 +38,14 @@ function renderRulesListBox() {
   }
 }
 
+function updateAddOrUpdateButtonLabel() {
+  if (selectedRuleIndex === -1) {
+    addOrUpdateRuleBtn.textContent = chrome.i18n ? (chrome.i18n.getMessage('add') || '追加') : '追加';
+  } else {
+    addOrUpdateRuleBtn.textContent = chrome.i18n ? (chrome.i18n.getMessage('update') || '更新') : '更新';
+  }
+}
+
 function fillRuleDetail(idx) {
   if (idx > 0 && rules[idx - 1]) {
     // idx-1: 0番目は(新規)なので
@@ -56,19 +64,19 @@ function fillRuleDetail(idx) {
     mimeInput.value = '';
     selectedRuleIndex = -1;
   }
+  updateAddOrUpdateButtonLabel();
 }
 
 function saveRulesToStorage() {
   chrome.storage.sync.set({ rules }, () => {
     renderRulesListBox();
-    showRawData();
   })
   ;
 }
 
-rulesListBox.addEventListener('change', () => {
-  const idx = rulesListBox.selectedIndex;
-  fillRuleDetail(idx);
+rulesListBox.addEventListener('change', function() {
+  fillRuleDetail(rulesListBox.selectedIndex);
+  updateAddOrUpdateButtonLabel();
 });
 
 // 上へボタン
@@ -142,18 +150,9 @@ function loadRulesFromStorage() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadRulesFromStorage();
-  showRawData();
   showDownloadHistory();
+  updateAddOrUpdateButtonLabel();
 });
-
-function showRawData() {
-  chrome.storage.sync.get(null, data => {
-    const rawDataElem = document.getElementById('rawData');
-    if (rawDataElem) {
-      rawDataElem.textContent = JSON.stringify(data, null, 2);
-    }
-  });
-}
 
 function showDownloadHistory() {
   if (!chrome.downloads) {
@@ -223,3 +222,23 @@ function showDownloadHistory() {
     });
   });
 }
+
+// 多言語化: message.jsonの値でUIテキストを置換
+function localizeHtml() {
+  const elements = document.querySelectorAll('[data-i18n]');
+  elements.forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (key && chrome.i18n) {
+      el.textContent = chrome.i18n.getMessage(key) || el.textContent;
+    }
+  });
+  // placeholder属性も置換
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (key && chrome.i18n) {
+      el.setAttribute('placeholder', chrome.i18n.getMessage(key) || el.getAttribute('placeholder'));
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', localizeHtml);
