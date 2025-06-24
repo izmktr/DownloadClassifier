@@ -52,10 +52,10 @@ function fillRuleDetail(idx) {
   if (idx > 0 && rules[idx - 1]) {
     // idx-1: 0番目は(新規)なので
     ruleNameInput.value = rules[idx - 1].name || '';
-    sendFolderInput.value = rules[idx - 1].sendFolder || '';
+    sendFolderInput.value = rules[idx - 1].folder || '';
     urlPatternInput.value = rules[idx - 1].urlPattern || '';
     filePatternInput.value = rules[idx - 1].filePattern || '';
-    mimeInput.value = rules[idx - 1].mime || '';
+    mimeInput.value = rules[idx - 1].mimePattern || '';
     selectedRuleIndex = idx - 1;
   } else {
     // (新規)が選択された場合
@@ -108,13 +108,13 @@ moveDownRuleBtn.addEventListener('click', () => {
 });
 
 addOrUpdateRuleBtn.addEventListener('click', () => {
-  const rule = {
-    name: ruleNameInput.value.trim(),
-    sendFolder: sendFolderInput.value.trim(),
-    urlPattern: urlPatternInput.value.trim(),
-    filePattern: filePatternInput.value.trim(),
-    mime: mimeInput.value.trim()
-  };
+  const rule = new DownloadRule(
+    ruleNameInput.value.trim(),
+    sendFolderInput.value.trim(),
+    urlPatternInput.value.trim(),
+    filePatternInput.value.trim(),
+    mimeInput.value.trim()
+  );;
   if (!rule.name) return;
   if (selectedRuleIndex >= 0 && rules[selectedRuleIndex]) {
     // 更新
@@ -263,8 +263,8 @@ if (testRuleBtn) {
       name: ruleNameInput.value,
       folder: sendFolderInput.value,
       urlPattern: urlPatternInput.value,
-      mimePattern: mimeInput.value,
-      filePattern: filePatternInput.value
+      filePattern: filePatternInput.value,
+      mimePattern: mimeInput.value
     });
     showDownloadHistory((item) => {
       // ルールにマッチするかチェック

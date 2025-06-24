@@ -9,12 +9,12 @@ function wildcardToRegExp(pattern) {
 
 // ダウンロード分類ルールクラス
 class DownloadRule {
-  constructor({ name, folder, urlPattern, mimePattern, filePattern }) {
+  constructor({ name, folder, urlPattern, filePattern, mimePattern }) {
     this.name = name;
     this.folder = folder;
     this.urlPattern = urlPattern;
-    this.mimePattern = mimePattern;
     this.filePattern = filePattern;
+    this.mimePattern = mimePattern;
   }
 
   match(downloadItem) {
