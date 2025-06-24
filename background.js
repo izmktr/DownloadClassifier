@@ -9,35 +9,36 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
   console.log('新しいダウンロード:', downloadItem);
 });
 
-function getRules(callback) {
+let cachedRules = [];
+
+function updateRulesCache() {
   chrome.storage.sync.get(['rules'], (result) => {
-    const rules = (result.rules || []).map(ruleObj => new DownloadRule(ruleObj));
-    callback(rules);
+    cachedRules = (result.rules || []).map(ruleObj => new DownloadRule(ruleObj));
   });
 }
 
-function sendDebugLog(msg) {
-  chrome.runtime.sendMessage({ type: 'debug-log', text: msg });
-}
+// 初回ロード時にキャッシュ
+updateRulesCache();
+
+// ルールが変更されたらキャッシュを更新
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && changes.rules) {
+    updateRulesCache();
+  }
+});
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-  getRules((rules) => {
-    const matched = rules.find(rule => rule.match(item));
-    if (matched && matched.folder) {
-      const filename = item.filename.split(/[\\/]/).pop();
-      suggest({ filename: `${matched.folder}/${filename}` });
-      const logMsg = `rule match: ${item.filename} → ${matched.folder} [${matched.name}]`;
-      console.log(logMsg);
-      sendDebugLog(logMsg);
-      return;
-    } else {
-      suggest();
-      const logMsg = `rule unmatch: ${item.filename}`;
-      console.log(logMsg);
-      sendDebugLog(logMsg);
-      return;
-    }
-  });
+  const matched = cachedRules.find(rule => rule.match(item));
+  if (matched && matched.folder) {
+    const filename = item.filename.split(/[\\/]/).pop();
+    suggest({ filename: `${matched.folder}/${filename}` });
+    const logMsg = `rule match: ${item.filename} → ${matched.folder} [${matched.name}]`;
+    console.log(logMsg);
+  } else {
+    suggest();
+    const logMsg = `rule unmatch: ${item.filename}`;
+    console.log(logMsg);
+  }
 });
 
 
