@@ -40,5 +40,14 @@ chrome.runtime.onMessage && chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
+// ルールのRawデータ表示
+function showRawData() {
+  chrome.storage.sync.get(['rules'], (result) => {
+    const pre = document.getElementById('rawData');
+    pre.textContent = JSON.stringify(result.rules || [], null, 2);
+  });
+}
+
 showRules();
 showDownloads();
+showRawData();
