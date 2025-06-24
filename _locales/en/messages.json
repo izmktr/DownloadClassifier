@@ -11,8 +11,9 @@
   "filePattern": { "message": "File Pattern" },
   "mime": { "message": "MIME Type" },
   "addOrUpdate": { "message": "Add/Update" },
+  "add": { "message": "Add" },
   "status": { "message": "Saved Data (Raw)" },
   "downloadHistory": { "message": "Download History" },
   "popupTitle": { "message": "Popup" },
-  "showDownloads": { "message": "Show Download History" }
+  "showOptions": { "message": "Show Options" }
 }

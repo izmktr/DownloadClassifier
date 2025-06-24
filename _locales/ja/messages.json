@@ -11,8 +11,9 @@
   "filePattern": { "message": "ファイルパターン" },
   "mime": { "message": "mimeタイプ" },
   "addOrUpdate": { "message": "追加/更新" },
+  "add": { "message": "追加" },
   "status": { "message": "保存内容（Rawデータ）" },
   "downloadHistory": { "message": "過去のダウンロード情報" },
   "popupTitle": { "message": "ポップアップ" },
-  "showDownloads": { "message": "ダウンロード履歴を表示" }
+  "showOptions": { "message": "オプションを表示" }
 }
