@@ -32,12 +32,10 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   if (matched && matched.folder) {
     const filename = item.filename.split(/[\\/]/).pop();
     suggest({ filename: `${matched.folder}/${filename}` });
-    const logMsg = `rule match: ${item.filename} → ${matched.folder} [${matched.name}]`;
-    console.log(logMsg);
+    console.log('rule match:', matched, item);
   } else {
     suggest();
-    const logMsg = `rule unmatch: ${item.filename}`;
-    console.log(logMsg);
+    console.log('rule unmatch:', item);
   }
 });
 
