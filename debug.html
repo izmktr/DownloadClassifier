@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>DownloadClassifier デバッグ</title>
+  <link rel="stylesheet" href="options.css">
+  <style>
+    .debug-log { background: #222; color: #eee; padding: 1em; font-size: 0.95em; height: 200px; overflow-y: auto; }
+    .debug-section { margin-bottom: 1em; }
+    .debug-section h2 { font-size: 1em; margin-bottom: 0.5em; }
+  </style>
+</head>
+<body>
+  <h1>DownloadClassifier デバッグ画面</h1>
+  <div class="debug-section">
+    <h2>ルール一覧</h2>
+    <ul id="debug-rules"></ul>
+  </div>
+  <div class="debug-section">
+    <h2>直近のダウンロード</h2>
+    <ul id="debug-downloads"></ul>
+  </div>
+  <div class="debug-section">
+    <h2>ログ</h2>
+    <pre class="debug-log" id="debug-log"></pre>
+  </div>
+  <script src="debug.js"></script>
+</body>
+</html>
