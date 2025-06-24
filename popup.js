@@ -15,19 +15,9 @@
 // byExtensionName: string - 拡張機能名（拡張機能経由の場合）
 
 function getDownloadsList() {
-  chrome.downloads.search({limit: 10, orderBy: ['-startTime']}, function(items) {
+  chrome.downloads.search({limit: 20, orderBy: ['-startTime']}, function(items) {
       const list = document.getElementById('downloads-list');
-      list.innerHTML = '';    chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
-        const lowerFilename = item.filename.toLowerCase();
-        const isImage = imageExtensions.some(ext => lowerFilename.endsWith(ext));
-        if (isImage) {
-          const newFilename = 'images/' + item.filename.split(/[\\/]/).pop();
-          suggest({filename: newFilename});
-        } else {
-          suggest();
-        }
-      });
+      list.innerHTML = '';
       items.forEach(item => {
           const li = document.createElement('li');
           li.textContent = `${item.filename.split(/\\|\//).pop()} [${item.mime}]`;
@@ -38,20 +28,29 @@ function getDownloadsList() {
 
 getDownloadsList();
 
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('openOptionsBtn');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      if (chrome.runtime.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
-      } else {
-        window.open(chrome.runtime.getURL('options.html'));
-      }
-    });
-  }
-});
-
 document.getElementById('show-options').addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
 });
+
+// 多言語化: message.jsonの値でUIテキストを置換
+function localizeHtml() {
+  const elements = document.querySelectorAll('[data-i18n]');
+  elements.forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (key && chrome.i18n) {
+      el.textContent = chrome.i18n.getMessage(key) || el.textContent;
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', localizeHtml);
+
+function localizeTitle() {
+  if (chrome.i18n) {
+    const titleMsg = chrome.i18n.getMessage('popupTitle');
+    if (titleMsg) {
+      document.title = titleMsg;
+    }
+  }
+}
+document.addEventListener('DOMContentLoaded', localizeTitle);
 
