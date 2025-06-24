@@ -20,5 +20,6 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
-  "options_page": "options.html"
+  "options_page": "options.html",
+  "default_locale": "ja"
 }

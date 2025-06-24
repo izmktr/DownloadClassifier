@@ -1,0 +1,18 @@
+{
+  "extOptionsTitle": { "message": "Extension Settings" },
+  "ruleLegend": { "message": "Rules" },
+  "rulesList": { "message": "Rule List" },
+  "moveUp": { "message": "Up" },
+  "moveDown": { "message": "Down" },
+  "delete": { "message": "Delete" },
+  "ruleName": { "message": "Rule Name" },
+  "sendFolder": { "message": "Destination Folder" },
+  "urlPattern": { "message": "URL Pattern" },
+  "filePattern": { "message": "File Pattern" },
+  "mime": { "message": "MIME Type" },
+  "addOrUpdate": { "message": "Add/Update" },
+  "status": { "message": "Saved Data (Raw)" },
+  "downloadHistory": { "message": "Download History" },
+  "popupTitle": { "message": "Popup" },
+  "showDownloads": { "message": "Show Download History" }
+}
