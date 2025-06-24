@@ -206,6 +206,7 @@ function showDownloadHistory() {
         mimeInput.value = item.mime || '';
         rulesListBox.selectedIndex = 0;
         selectedRuleIndex = -1;
+        updateAddOrUpdateButtonLabel();
       });
 
       li.appendChild(addBtn);
