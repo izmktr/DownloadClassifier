@@ -10,6 +10,7 @@ const filePatternInput = document.getElementById('filePattern');
 const mimeInput = document.getElementById('mime');
 const moveUpRuleBtn = document.getElementById('moveUpRuleBtn');
 const moveDownRuleBtn = document.getElementById('moveDownRuleBtn');
+const testRuleBtn = document.getElementById('testRuleBtn');
 
 let rules = [];
 let selectedRuleIndex = -1;
@@ -154,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAddOrUpdateButtonLabel();
 });
 
-function showDownloadHistory() {
+function showDownloadHistory(hightlightRule = (rule) => false) {
   if (!chrome.downloads) {
     const list = document.getElementById('downloadHistory');
     if (list) {
@@ -218,8 +219,29 @@ function showDownloadHistory() {
       } else {
         urlDisplay = item.url;
       }
+      if (hightlightRule(item)) {
+        li.style.background = 'yellow';
+      }
       li.appendChild(document.createTextNode(`${fileName} [${urlDisplay}]`));
       list.appendChild(li);
+    });
+  });
+}
+
+// テストボタン押下時の処理
+if (testRuleBtn) {
+  testRuleBtn.addEventListener('click', () => {
+    // 入力中のルール情報をDownloadRule形式に変換
+    const testRule = new DownloadRule({
+      name: ruleNameInput.value,
+      folder: sendFolderInput.value,
+      urlPattern: urlPatternInput.value,
+      mimePattern: mimeInput.value,
+      filePattern: filePatternInput.value
+    });
+    showDownloadHistory((item) => {
+      // ルールにマッチするかチェック
+      return testRule.match(item);
     });
   });
 }
