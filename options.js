@@ -14,6 +14,7 @@ const testRuleBtn = document.getElementById('testRuleBtn');
 
 let rules = [];
 let selectedRuleIndex = -1;
+let downloadHistoryCount = 20;
 
 function renderRulesListBox() {
   const prevSelectedIndex = rulesListBox.selectedIndex;
@@ -155,6 +156,32 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAddOrUpdateButtonLabel();
 });
 
+function loadHistoryCount() {
+  chrome.storage.local.get({ downloadHistoryCount: 20 }, (data) => {
+    downloadHistoryCount = data.downloadHistoryCount;
+    const historyCountInput = document.getElementById('historyCountInput');
+    if (historyCountInput) historyCountInput.value = downloadHistoryCount;
+    showDownloadHistory();
+  });
+}
+
+function saveHistoryCount(val) {
+  chrome.storage.local.set({ downloadHistoryCount: val });
+}
+
+const changeHistoryCountBtn = document.getElementById('changeHistoryCountBtn');
+const historyCountInput = document.getElementById('historyCountInput');
+if (changeHistoryCountBtn && historyCountInput) {
+  changeHistoryCountBtn.addEventListener('click', () => {
+    const val = parseInt(historyCountInput.value, 10);
+    if (!isNaN(val) && val > 0 && val <= 100) {
+      downloadHistoryCount = val;
+      saveHistoryCount(val);
+      showDownloadHistory();
+    }
+  });
+}
+
 function showDownloadHistory(hightlightRule = (rule) => false) {
   if (!chrome.downloads) {
     const list = document.getElementById('downloadHistory');
@@ -163,7 +190,7 @@ function showDownloadHistory(hightlightRule = (rule) => false) {
     }
     return;
   }
-  chrome.downloads.search({ limit: 10, orderBy: ['-startTime'] }, function(items) {
+  chrome.downloads.search({ limit: downloadHistoryCount, orderBy: ['-startTime'] }, function(items) {
     const list = document.getElementById('downloadHistory');
     if (!list) return;
     list.innerHTML = '';

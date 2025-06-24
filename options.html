@@ -46,6 +46,10 @@
 
   <h2 data-i18n="downloadHistory">過去のダウンロード情報</h2>
   <ul id="downloadHistory" style="background:#f9f9f9; padding:8px; border:1px solid #ccc; max-width:100%; overflow:auto;"></ul>
+  <div style="margin-top:1em;">
+    <input type="number" id="historyCountInput" min="1" max="100" value="20" style="width:60px;">
+    <button type="button" id="changeHistoryCountBtn">件数を変更</button>
+  </div>
 
   <script src="downloadRule.js"></script>
   <script src="options.js"></script>
