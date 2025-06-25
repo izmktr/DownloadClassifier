@@ -114,7 +114,6 @@ addOrUpdateRuleBtn.addEventListener('click', () => {
     filePattern: filePatternInput.value.trim(),
     mimePattern: mimeInput.value.trim()
   });
-  console.log('Adding/updating rule:', rule);
   if (!rule.name) return;
   if (selectedRuleIndex >= 0 && rules[selectedRuleIndex]) {
     // 更新
@@ -124,7 +123,6 @@ addOrUpdateRuleBtn.addEventListener('click', () => {
     rules.push(rule);
     selectedRuleIndex = rules.length - 1;
   }
-  console.log('Rules after update:', rules);
 
   saveRulesToStorage();
   renderRulesListBox();
