@@ -29,7 +29,7 @@ function showDownloads() {
 
 // Rawデータ表示
 function showRawData() {
-  chrome.storage.local.get(['rules'], (result) => {
+  chrome.storage.local.get(null, (result) => {
     const pre = document.getElementById('rawData');
     pre.textContent = JSON.stringify(result.rules || [], null, 2);
   });
