@@ -70,10 +70,9 @@ function fillRuleDetail(idx) {
 }
 
 function saveRulesToStorage() {
-  chrome.storage.sync.set({ rules }, () => {
+  chrome.storage.local.set({ rules }, () => {
     renderRulesListBox();
-  })
-  ;
+  });
 }
 
 rulesListBox.addEventListener('change', function() {
@@ -143,7 +142,7 @@ deleteRuleBtn.addEventListener('click', () => {
 });
 
 function loadRulesFromStorage() {
-  chrome.storage.sync.get({ rules: [] }, data => {
+  chrome.storage.local.get({ rules: [] }, data => {
     rules = data.rules;
     renderRulesListBox();
     fillRuleDetail(-1);
