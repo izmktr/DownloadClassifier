@@ -9,20 +9,42 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
   console.log('新しいダウンロード:', downloadItem);
 });
 
-chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-  chrome.storage.local.get(['rules'], (result) => {
-    const rules = result.rules || [];
-    const ruleObjs = rules.map(r => new DownloadRule(r));
-    const matched = ruleObjs.find(rule => rule.match(item));
+let cachedRules = [];
 
-    if (matched && matched.folder) {
-      const filename = item.filename.split(/[\\/]/).pop();
-      suggest({ filename: `${matched.folder}/${filename}` });
-      console.log('rule match:', matched, item);
-    } else {
-      suggest();
-      console.log('rule unmatch:', item);
-    }
+function updateRulesCache() {
+  chrome.storage.local.get(['rules'], (result) => {
+    cachedRules = (result.rules || []).map(r => new DownloadRule(r));
+    //console.log('loaded', cachedRules);
+  });
+}
+
+// 初回ロード時にキャッシュ
+updateRulesCache();
+
+// ルールが変更されたらキャッシュを更新
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.rules) {
+    updateRulesCache();
+  }
+});
+
+chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+  const matched = cachedRules.find(rule => rule.match(item));
+  if (matched && matched.folder) {
+    const filename = item.filename.split(/[\\/]/).pop();
+    const newfilepath = `${matched.folder}/${filename}`;
+    suggest({ filename: newfilepath });
+    console.log('rule match:', matched, item, newfilepath);
+  } else {
+    suggest();
+    console.log('rule unmatch:', item);
+  }
+  // 履歴に追加
+  chrome.storage.local.get({ history: [] }, (result) => {
+    const history = result.history;
+    history.unshift(item);
+    if (history.length > 100) history.length = 100;
+    chrome.storage.local.set({ history });
   });
 });
 
