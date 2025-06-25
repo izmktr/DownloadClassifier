@@ -107,9 +107,14 @@ moveDownRuleBtn.addEventListener('click', () => {
 });
 
 addOrUpdateRuleBtn.addEventListener('click', () => {
+  let sendFolderValue = sendFolderInput.value.trim();
+  if (sendFolderValue.endsWith('/') || sendFolderValue.endsWith('\\')) {
+    sendFolderValue = sendFolderValue.slice(0, -1);
+  }
+
   const rule = new DownloadRule({
     name: ruleNameInput.value.trim(),
-    folder: sendFolderInput.value.trim(),
+    folder: sendFolderValue,
     urlPattern: urlPatternInput.value.trim(),
     filePattern: filePatternInput.value.trim(),
     mimePattern: mimeInput.value.trim()
@@ -187,24 +192,18 @@ if (changeHistoryCountBtn && historyCountInput) {
 }
 
 function showDownloadHistory(hightlightRule = (rule) => false) {
-  if (!chrome.downloads) {
-    const list = document.getElementById('downloadHistory');
-    if (list) {
-      list.innerHTML = '<li>chrome.downloads APIは利用できません。</li>';
-    }
-    return;
-  }
-  chrome.downloads.search({ limit: downloadHistoryCount, orderBy: ['-startTime'] }, function(items) {
+  chrome.storage.local.get({ history: [] }, (data) => {
+    const items = data.history;
     const list = document.getElementById('downloadHistory');
     if (!list) return;
     list.innerHTML = '';
-    if (items.length === 0) {
+    if (!items || items.length === 0) {
       list.innerHTML = '<li>ダウンロード履歴がありません。</li>';
       return;
     }
-    items.forEach(item => {
+    items.slice(0, downloadHistoryCount).forEach(item => {
       const li = document.createElement('li');
-      const fileName = item.filename.split(/[\\/]/).pop();
+      const fileName = item.filename ? item.filename.split(/[\\/]/).pop() : '';
 
       // ルール追加ボタン（左側に配置）
       const addBtn = document.createElement('button');
@@ -219,16 +218,16 @@ function showDownloadHistory(hightlightRule = (rule) => false) {
           try {
             const urlObj = new URL(item.url);
             urlPattern = `*://${urlObj.hostname}/*`;
-            ruleName = urlObj.hostname; // ドメイン名をルール名に
+            ruleName = urlObj.hostname;
           } catch (e) {
             urlPattern = '';
             ruleName = fileName;
           }
         } else if (item.url && (item.url.startsWith('blob:https://') || item.url.startsWith('blob:http://'))) {
           try {
-            const urlObj = new URL(item.url.substring(5)); // blob:を除去
+            const urlObj = new URL(item.url.substring(5));
             urlPattern = `*://${urlObj.hostname}/*`;
-            ruleName = urlObj.hostname; // ドメイン名をルール名に
+            ruleName = urlObj.hostname;
           } catch (e) {
             urlPattern = '';
             ruleName = fileName;
@@ -249,12 +248,11 @@ function showDownloadHistory(hightlightRule = (rule) => false) {
 
       li.appendChild(addBtn);
 
-      // 表示内容をitem.urlに変更
       let urlDisplay = '';
-      if (item.url.startsWith('data:')) {
+      if (item.url && item.url.startsWith('data:')) {
         urlDisplay = 'DATA URL';
       } else {
-        urlDisplay = item.url;
+        urlDisplay = item.url || '';
       }
       if (hightlightRule(item)) {
         li.style.background = 'yellow';
