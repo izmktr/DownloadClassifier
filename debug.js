@@ -1,7 +1,7 @@
 // debug.js
 // ルール一覧表示
 function showRules() {
-  chrome.storage.sync.get(['rules'], (result) => {
+  chrome.storage.local.get(['rules'], (result) => {
     const rules = result.rules || [];
     const ul = document.getElementById('debug-rules');
     ul.innerHTML = '';
@@ -27,22 +27,9 @@ function showDownloads() {
   });
 }
 
-// ログ表示（background.jsから送信されたメッセージを受信）
-function showLog(msg) {
-  const pre = document.getElementById('debug-log');
-  pre.textContent += msg + '\n';
-  pre.scrollTop = pre.scrollHeight;
-}
-
-chrome.runtime.onMessage && chrome.runtime.onMessage.addListener((message) => {
-  if (message.type === 'debug-log') {
-    showLog(message.text);
-  }
-});
-
-// ルールのRawデータ表示
+// Rawデータ表示
 function showRawData() {
-  chrome.storage.sync.get(['rules'], (result) => {
+  chrome.storage.local.get(['rules'], (result) => {
     const pre = document.getElementById('rawData');
     pre.textContent = JSON.stringify(result.rules || [], null, 2);
   });
