@@ -107,13 +107,14 @@ moveDownRuleBtn.addEventListener('click', () => {
 });
 
 addOrUpdateRuleBtn.addEventListener('click', () => {
-  const rule = new DownloadRule(
-    ruleNameInput.value.trim(),
-    sendFolderInput.value.trim(),
-    urlPatternInput.value.trim(),
-    filePatternInput.value.trim(),
-    mimeInput.value.trim()
-  );;
+  const rule = new DownloadRule({
+    name: ruleNameInput.value.trim(),
+    folder: sendFolderInput.value.trim(),
+    urlPattern: urlPatternInput.value.trim(),
+    filePattern: filePatternInput.value.trim(),
+    mimePattern: mimeInput.value.trim()
+  });
+  console.log('Adding/updating rule:', rule);
   if (!rule.name) return;
   if (selectedRuleIndex >= 0 && rules[selectedRuleIndex]) {
     // 更新
@@ -123,6 +124,8 @@ addOrUpdateRuleBtn.addEventListener('click', () => {
     rules.push(rule);
     selectedRuleIndex = rules.length - 1;
   }
+  console.log('Rules after update:', rules);
+
   saveRulesToStorage();
   renderRulesListBox();
   rulesListBox.selectedIndex = selectedRuleIndex + 1;
@@ -153,6 +156,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadRulesFromStorage();
   showDownloadHistory();
   updateAddOrUpdateButtonLabel();
+  // タイトルの多言語化
+  if (chrome.i18n) {
+    document.title = chrome.i18n.getMessage('extOptionsTitle') || document.title;
+  }
 });
 
 function loadHistoryCount() {
