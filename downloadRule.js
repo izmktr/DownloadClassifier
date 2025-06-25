@@ -18,10 +18,18 @@ class DownloadRule {
   }
 
   match(downloadItem) {
-    console.log('match', downloadItem, this);
-    if (this.urlPattern && !wildcardToRegExp(this.urlPattern).test(downloadItem.url)) return false;
-    if (this.mimePattern && !wildcardToRegExp(this.mimePattern).test(downloadItem.mime)) return false;
-    if (this.filePattern && !wildcardToRegExp(this.filePattern).test(downloadItem.filename)) return false;
+    if (this.urlPattern && !wildcardToRegExp(this.urlPattern).test(downloadItem.url)){
+      //console.log('URL不一致:', this.urlPattern, downloadItem.url);
+      return false;
+    } 
+    if (this.mimePattern && !wildcardToRegExp(this.mimePattern).test(downloadItem.mime)) {
+      //console.log('MIME不一致:', this.mimePattern, downloadItem.mime);
+      return false;
+    }
+    if (this.filePattern && !wildcardToRegExp(this.filePattern).test(downloadItem.filename)) {
+      //console.log('ファイル名不一致:', this.filePattern, downloadItem.filename);
+      return false;
+    }
     return true;
   }
 }
