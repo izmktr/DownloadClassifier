@@ -210,24 +210,30 @@ function showDownloadHistory(hightlightRule = (rule) => false) {
         const extMatch = fileName.match(/\.[^.]+$/);
         const filePattern = extMatch ? `*${extMatch[0]}` : fileName;
         let urlPattern = '';
+        let ruleName = fileName;
         if (item.url && (item.url.startsWith('http://') || item.url.startsWith('https://'))) {
           try {
             const urlObj = new URL(item.url);
             urlPattern = `*://${urlObj.hostname}/*`;
+            ruleName = urlObj.hostname; // ドメイン名をルール名に
           } catch (e) {
             urlPattern = '';
+            ruleName = fileName;
           }
-        }else if (item.url && (item.url.startsWith('blob:https://') || item.url.startsWith('blob:http://'))) {
+        } else if (item.url && (item.url.startsWith('blob:https://') || item.url.startsWith('blob:http://'))) {
           try {
             const urlObj = new URL(item.url.substring(5)); // blob:を除去
             urlPattern = `*://${urlObj.hostname}/*`;
+            ruleName = urlObj.hostname; // ドメイン名をルール名に
           } catch (e) {
             urlPattern = '';
+            ruleName = fileName;
           }
         } else {
           urlPattern = '*';
+          ruleName = fileName;
         }
-        ruleNameInput.value = fileName;
+        ruleNameInput.value = ruleName;
         sendFolderInput.value = '';
         urlPatternInput.value = urlPattern;
         filePatternInput.value = filePattern;
