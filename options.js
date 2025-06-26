@@ -1,309 +1,387 @@
-// ルールの追加・削除・保存・読み込み
+// options.js - Refactored
 
-const rulesListBox = document.getElementById('rulesListBox');
-const deleteRuleBtn = document.getElementById('deleteRuleBtn');
-const addOrUpdateRuleBtn = document.getElementById('addOrUpdateRuleBtn');
-const ruleNameInput = document.getElementById('ruleName');
-const sendFolderInput = document.getElementById('sendFolder');
-const urlPatternInput = document.getElementById('urlPattern');
-const filePatternInput = document.getElementById('filePattern');
-const mimeInput = document.getElementById('mime');
-const moveUpRuleBtn = document.getElementById('moveUpRuleBtn');
-const moveDownRuleBtn = document.getElementById('moveDownRuleBtn');
-const testRuleBtn = document.getElementById('testRuleBtn');
+// --- Modules -----------------------------------------------------------------
 
-let rules = [];
-let selectedRuleIndex = -1;
-let downloadHistoryCount = 20;
+/**
+ * UIに関する操作を担当するモジュール
+ */
+const UIManager = {
+  // DOM要素のキャッシュ
+  elements: {
+    rulesListBox: document.getElementById('rulesListBox'),
+    deleteRuleBtn: document.getElementById('deleteRuleBtn'),
+    addOrUpdateRuleBtn: document.getElementById('addOrUpdateRuleBtn'),
+    ruleNameInput: document.getElementById('ruleName'),
+    sendFolderInput: document.getElementById('sendFolder'),
+    urlPatternInput: document.getElementById('urlPattern'),
+    filePatternInput: document.getElementById('filePattern'),
+    mimeInput: document.getElementById('mime'),
+    moveUpRuleBtn: document.getElementById('moveUpRuleBtn'),
+    moveDownRuleBtn: document.getElementById('moveDownRuleBtn'),
+    testRuleBtn: document.getElementById('testRuleBtn'),
+    downloadHistory: document.getElementById('downloadHistory'),
+    historyCountInput: document.getElementById('historyCountInput'),
+    changeHistoryCountBtn: document.getElementById('changeHistoryCountBtn'),
+  },
 
-function renderRulesListBox() {
-  const prevSelectedIndex = rulesListBox.selectedIndex;
-  rulesListBox.innerHTML = '';
-  // 一番上に「(新規)」を追加
-  const newOption = document.createElement('option');
-  newOption.value = '-1';
-  newOption.textContent = '(新規)';
-  rulesListBox.appendChild(newOption);
+  /**
+   * ルールリストを描画する
+   * @param {Array} rules - 描画するルールの配列
+   * @param {number} selectedIndex - 選択状態にするインデックス
+   */
+  renderRulesList(rules, selectedIndex) {
+    const { rulesListBox } = this.elements;
+    const prevSelectedIndex = rulesListBox.selectedIndex;
+    rulesListBox.innerHTML = '';
 
-  rules.forEach((rule, idx) => {
-    const option = document.createElement('option');
-    option.value = idx;
-    option.textContent = rule.name || '(名称未設定)';
-    rulesListBox.appendChild(option);
-  });
+    const newOption = document.createElement('option');
+    newOption.value = '-1';
+    newOption.textContent = '(新規)';
+    rulesListBox.appendChild(newOption);
 
-  // 選択状態を復元
-  if (prevSelectedIndex >= 0 && prevSelectedIndex < rulesListBox.options.length) {
-    rulesListBox.selectedIndex = prevSelectedIndex;
-  } else {
-    rulesListBox.selectedIndex = 0;
-  }
-}
+    rules.forEach((rule, idx) => {
+      const option = document.createElement('option');
+      option.value = idx;
+      option.textContent = rule.name || '(名称未設定)';
+      rulesListBox.appendChild(option);
+    });
 
-function updateAddOrUpdateButtonLabel() {
-  if (selectedRuleIndex === -1) {
-    addOrUpdateRuleBtn.textContent = chrome.i18n ? (chrome.i18n.getMessage('add') || '追加') : '追加';
-  } else {
-    addOrUpdateRuleBtn.textContent = chrome.i18n ? (chrome.i18n.getMessage('update') || '更新') : '更新';
-  }
-}
+    rulesListBox.selectedIndex = selectedIndex !== -1 ? selectedIndex + 1 : 0;
+  },
 
-function fillRuleDetail(idx) {
-  if (idx > 0 && rules[idx - 1]) {
-    // idx-1: 0番目は(新規)なので
-    ruleNameInput.value = rules[idx - 1].name || '';
-    sendFolderInput.value = rules[idx - 1].folder || '';
-    urlPatternInput.value = rules[idx - 1].urlPattern || '';
-    filePatternInput.value = rules[idx - 1].filePattern || '';
-    mimeInput.value = rules[idx - 1].mimePattern || '';
-    selectedRuleIndex = idx - 1;
-  } else {
-    // (新規)が選択された場合
-    ruleNameInput.value = 'New Rule';
-    sendFolderInput.value = '';
-    urlPatternInput.value = '';
-    filePatternInput.value = '';
-    mimeInput.value = '';
-    selectedRuleIndex = -1;
-  }
-  updateAddOrUpdateButtonLabel();
-}
-
-function saveRulesToStorage() {
-  chrome.storage.local.set({ rules }, () => {
-    renderRulesListBox();
-  });
-}
-
-rulesListBox.addEventListener('change', function() {
-  fillRuleDetail(rulesListBox.selectedIndex);
-  updateAddOrUpdateButtonLabel();
-});
-
-// 上へボタン
-moveUpRuleBtn.addEventListener('click', () => {
-  if (selectedRuleIndex > 0) {
-    [rules[selectedRuleIndex - 1], rules[selectedRuleIndex]] = [rules[selectedRuleIndex], rules[selectedRuleIndex - 1]];
-    selectedRuleIndex--;
-    saveRulesToStorage();
-    renderRulesListBox();
-    rulesListBox.selectedIndex = selectedRuleIndex + 1;
-    fillRuleDetail(rulesListBox.selectedIndex);
-    rulesListBox.focus();
-  }
-});
-
-// 下へボタン
-moveDownRuleBtn.addEventListener('click', () => {
-  if (selectedRuleIndex >= 0 && selectedRuleIndex < rules.length - 1) {
-    [rules[selectedRuleIndex], rules[selectedRuleIndex + 1]] = [rules[selectedRuleIndex + 1], rules[selectedRuleIndex]];
-    selectedRuleIndex++;
-    saveRulesToStorage();
-    renderRulesListBox();
-    rulesListBox.selectedIndex = selectedRuleIndex + 1;
-    fillRuleDetail(rulesListBox.selectedIndex);
-    rulesListBox.focus();
-  }
-});
-
-addOrUpdateRuleBtn.addEventListener('click', () => {
-  let sendFolderValue = sendFolderInput.value.trim();
-  if (sendFolderValue.endsWith('/') || sendFolderValue.endsWith('\\')) {
-    sendFolderValue = sendFolderValue.slice(0, -1);
-  }
-
-  const rule = new DownloadRule({
-    name: ruleNameInput.value.trim(),
-    folder: sendFolderValue,
-    urlPattern: urlPatternInput.value.trim(),
-    filePattern: filePatternInput.value.trim(),
-    mimePattern: mimeInput.value.trim()
-  });
-  if (!rule.name) return;
-  if (selectedRuleIndex >= 0 && rules[selectedRuleIndex]) {
-    // 更新
-    rules[selectedRuleIndex] = rule;
-  } else {
-    // 追加
-    rules.push(rule);
-    selectedRuleIndex = rules.length - 1;
-  }
-
-  saveRulesToStorage();
-  renderRulesListBox();
-  rulesListBox.selectedIndex = selectedRuleIndex + 1;
-  fillRuleDetail(rulesListBox.selectedIndex);
-  rulesListBox.focus();
-});
-
-deleteRuleBtn.addEventListener('click', () => {
-  if (selectedRuleIndex >= 0 && rules[selectedRuleIndex]) {
-    rules.splice(selectedRuleIndex, 1);
-    saveRulesToStorage();
-    renderRulesListBox();
-    fillRuleDetail(0); // (新規)を選択状態に
-    rulesListBox.selectedIndex = 0;
-    rulesListBox.focus();
-  }
-});
-
-function loadRulesFromStorage() {
-  chrome.storage.local.get({ rules: [] }, data => {
-    rules = data.rules;
-    renderRulesListBox();
-    fillRuleDetail(-1);
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadRulesFromStorage();
-  showDownloadHistory();
-  updateAddOrUpdateButtonLabel();
-  // タイトルの多言語化
-  if (chrome.i18n) {
-    document.title = chrome.i18n.getMessage('extOptionsTitle') || document.title;
-  }
-});
-
-function loadHistoryCount() {
-  chrome.storage.local.get({ downloadHistoryCount: 20 }, (data) => {
-    downloadHistoryCount = data.downloadHistoryCount;
-    const historyCountInput = document.getElementById('historyCountInput');
-    if (historyCountInput) historyCountInput.value = downloadHistoryCount;
-    showDownloadHistory();
-  });
-}
-
-function saveHistoryCount(val) {
-  chrome.storage.local.set({ downloadHistoryCount: val });
-}
-
-const changeHistoryCountBtn = document.getElementById('changeHistoryCountBtn');
-const historyCountInput = document.getElementById('historyCountInput');
-if (changeHistoryCountBtn && historyCountInput) {
-  changeHistoryCountBtn.addEventListener('click', () => {
-    const val = parseInt(historyCountInput.value, 10);
-    if (!isNaN(val) && val > 0 && val <= 100) {
-      downloadHistoryCount = val;
-      saveHistoryCount(val);
-      showDownloadHistory();
+  /**
+   * ルール詳細フォームを埋める
+   * @param {object | null} rule - 表示するルールオブジェクト
+   */
+  fillRuleDetail(rule) {
+    if (rule) {
+      this.elements.ruleNameInput.value = rule.name || '';
+      this.elements.sendFolderInput.value = rule.folder || '';
+      this.elements.urlPatternInput.value = rule.urlPattern || '';
+      this.elements.filePatternInput.value = rule.filePattern || '';
+      this.elements.mimeInput.value = rule.mimePattern || '';
+    } else {
+      this.elements.ruleNameInput.value = 'New Rule';
+      this.elements.sendFolderInput.value = '';
+      this.elements.urlPatternInput.value = '';
+      this.elements.filePatternInput.value = '';
+      this.elements.mimeInput.value = '';
     }
-  });
-}
+  },
 
-function showDownloadHistory(hightlightRule = (rule) => false) {
-  chrome.storage.local.get({ history: [] }, (data) => {
-    const items = data.history;
-    const list = document.getElementById('downloadHistory');
-    if (!list) return;
-    
-    // --- 安全なDOM操作に書き換え ---
-    list.innerHTML = ''; // まずリストをクリア
+  /**
+   * 追加/更新ボタンのラベルを更新する
+   * @param {boolean} isNew - 新規ルールの場合はtrue
+   */
+  updateAddOrUpdateButtonLabel(isNew) {
+    const key = isNew ? 'add' : 'update';
+    this.elements.addOrUpdateRuleBtn.textContent = chrome.i18n.getMessage(key) || (isNew ? '追加' : '更新');
+  },
 
-    if (!items || items.length === 0) {
+  /**
+   * ダウンロード履歴を描画する
+   * @param {Array} historyItems - 履歴アイテムの配列
+   * @param {function} onAddToRuleClick - 「このファイルでルール追加」ボタンのクリックハンドラ
+   * @param {function} hightlightRule - ハイライト対象のルールかどうかを判定する関数
+   */
+  renderDownloadHistory(historyItems, onAddToRuleClick, hightlightRule) {
+    const { downloadHistory } = this.elements;
+    downloadHistory.replaceChildren(); // 安全なクリア
+
+    if (!historyItems || historyItems.length === 0) {
       const li = document.createElement('li');
-      li.textContent = 'ダウンロード履歴がありません。';
-      list.appendChild(li);
+      li.textContent = chrome.i18n.getMessage('noDownloadHistory') || 'ダウンロード履歴がありません。';
+      downloadHistory.appendChild(li);
       return;
     }
-    // --- ここまで ---
 
-    items.slice(0, downloadHistoryCount).forEach(item => {
+    historyItems.forEach(item => {
       const li = document.createElement('li');
       const fileName = item.filename ? item.filename.split(/[\\/]/).pop() : '';
 
-      // ルール追加ボタン（左側に配置）
       const addBtn = document.createElement('button');
-      addBtn.textContent = 'このファイルでルール追加';
+      addBtn.textContent = chrome.i18n.getMessage('addRuleWithThisFile') || 'このファイルでルール追加';
       addBtn.style.marginRight = '8px';
-      addBtn.addEventListener('click', () => {
-        const extMatch = fileName.match(/\.[^.]+$/);
-        const filePattern = extMatch ? `*${extMatch[0]}` : fileName;
-        let urlPattern = '';
-        let ruleName = fileName;
-        if (item.url && (item.url.startsWith('http://') || item.url.startsWith('https://'))) {
-          try {
-            const urlObj = new URL(item.url);
-            urlPattern = `*://${urlObj.hostname}/*`;
-            ruleName = urlObj.hostname;
-          } catch (e) {
-            urlPattern = '';
-            ruleName = fileName;
-          }
-        } else if (item.url && (item.url.startsWith('blob:https://') || item.url.startsWith('blob:http://'))) {
-          try {
-            const urlObj = new URL(item.url.substring(5));
-            urlPattern = `*://${urlObj.hostname}/*`;
-            ruleName = urlObj.hostname;
-          } catch (e) {
-            urlPattern = '';
-            ruleName = fileName;
-          }
-        } else {
-          urlPattern = '*';
-          ruleName = fileName;
-        }
-        ruleNameInput.value = ruleName;
-        sendFolderInput.value = '';
-        urlPatternInput.value = urlPattern;
-        filePatternInput.value = filePattern;
-        mimeInput.value = item.mime || '';
-        rulesListBox.selectedIndex = 0;
-        selectedRuleIndex = -1;
-        updateAddOrUpdateButtonLabel();
-      });
-
+      addBtn.addEventListener('click', () => onAddToRuleClick(item));
       li.appendChild(addBtn);
 
-      let urlDisplay = '';
-      if (item.url && item.url.startsWith('data:')) {
+      let urlDisplay = item.url || '';
+      if (urlDisplay.startsWith('data:')) {
         urlDisplay = 'DATA URL';
-      } else {
-        urlDisplay = item.url || '';
       }
+      
       if (hightlightRule(item)) {
         li.style.background = 'yellow';
       }
+
       li.appendChild(document.createTextNode(`${fileName} [${urlDisplay}]`));
-      list.appendChild(li);
+      downloadHistory.appendChild(li);
     });
-  });
-}
+  },
 
-// テストボタン押下時の処理
-if (testRuleBtn) {
-  testRuleBtn.addEventListener('click', () => {
-    // 入力中のルール情報をDownloadRule形式に変換
-    const testRule = new DownloadRule({
-      name: ruleNameInput.value,
-      folder: sendFolderInput.value,
-      urlPattern: urlPatternInput.value,
-      filePattern: filePatternInput.value,
-      mimePattern: mimeInput.value
-    });
-    showDownloadHistory((item) => {
-      // ルールにマッチするかチェック
-      return testRule.match(item);
-    });
-  });
-}
-
-// 多言語化: message.jsonの値でUIテキストを置換
-function localizeHtml() {
-  const elements = document.querySelectorAll('[data-i18n]');
-  elements.forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (key && chrome.i18n) {
-      el.textContent = chrome.i18n.getMessage(key) || el.textContent;
+  /**
+   * フォームから現在のルールデータを取得する
+   * @returns {object} ルールデータ
+   */
+  getRuleDataFromForm() {
+    let sendFolderValue = this.elements.sendFolderInput.value.trim();
+    if (sendFolderValue.endsWith('/') || sendFolderValue.endsWith('\\')) {
+        sendFolderValue = sendFolderValue.slice(0, -1);
     }
-  });
-  // placeholder属性も置換
-  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
-    const key = el.getAttribute('data-i18n-ph');
-    if (key && chrome.i18n) {
-      el.setAttribute('placeholder', chrome.i18n.getMessage(key) || el.getAttribute('placeholder'));
-    }
-  });
-}
+    return {
+      name: this.elements.ruleNameInput.value.trim(),
+      folder: sendFolderValue,
+      urlPattern: this.elements.urlPatternInput.value.trim(),
+      filePattern: this.elements.filePatternInput.value.trim(),
+      mimePattern: this.elements.mimeInput.value.trim(),
+    };
+  },
 
-document.addEventListener('DOMContentLoaded', localizeHtml);
+  /**
+   * 履歴からルールを作成するための情報をフォームに設定する
+   * @param {object} item - 履歴アイテム
+   */
+  fillRuleFormFromHistory(item) {
+    const fileName = item.filename ? item.filename.split(/[\\/]/).pop() : '';
+    const extMatch = fileName.match(/\.[^.]+$/);
+    const filePattern = extMatch ? `*${extMatch[0]}` : fileName;
+    
+    let urlPattern = '*';
+    let ruleName = fileName;
+    
+    try {
+      const urlStr = item.url.startsWith('blob:') ? item.url.substring(5) : item.url;
+      const urlObj = new URL(urlStr);
+      if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
+        urlPattern = `*://${urlObj.hostname}/*`;
+        ruleName = urlObj.hostname;
+      }
+    } catch (e) {
+      // URLの解析に失敗した場合はデフォルト値を使用
+    }
+
+    this.elements.ruleNameInput.value = ruleName;
+    this.elements.sendFolderInput.value = '';
+    this.elements.urlPatternInput.value = urlPattern;
+    this.elements.filePatternInput.value = filePattern;
+    this.elements.mimeInput.value = item.mime || '';
+  },
+
+  /**
+   * UIのテキストを多言語化する
+   */
+  localize() {
+    document.title = chrome.i18n.getMessage('extOptionsTitle') || document.title;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (key) {
+        el.textContent = chrome.i18n.getMessage(key) || el.textContent;
+      }
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      const key = el.getAttribute('data-i18n-ph');
+      if (key) {
+        el.setAttribute('placeholder', chrome.i18n.getMessage(key) || el.getAttribute('placeholder'));
+      }
+    });
+  },
+};
+
+/**
+ * ルールデータの管理を担当するモジュール
+ */
+const RuleManager = {
+  rules: [],
+  selectedIndex: -1,
+  historyCount: 20,
+
+  async load() {
+    const data = await chrome.storage.local.get({ rules: [], historyCount: 20 });
+    this.rules = data.rules;
+    this.historyCount = data.historyCount;
+    this.selectedIndex = -1;
+  },
+
+  async save() {
+    await chrome.storage.local.set({ rules: this.rules });
+  },
+
+  get(index) {
+    return this.rules[index] || null;
+  },
+
+  add(rule) {
+    this.rules.push(rule);
+    this.selectedIndex = this.rules.length - 1;
+  },
+
+  update(rule) {
+    if (this.selectedIndex !== -1) {
+      this.rules[this.selectedIndex] = rule;
+    }
+  },
+
+  delete() {
+    if (this.selectedIndex !== -1) {
+      this.rules.splice(this.selectedIndex, 1);
+      this.selectedIndex = -1;
+    }
+  },
+
+  moveUp() {
+    if (this.selectedIndex > 0) {
+      [this.rules[this.selectedIndex - 1], this.rules[this.selectedIndex]] = 
+      [this.rules[this.selectedIndex], this.rules[this.selectedIndex - 1]];
+      this.selectedIndex--;
+    }
+  },
+
+  moveDown() {
+    if (this.selectedIndex >= 0 && this.selectedIndex < this.rules.length - 1) {
+      [this.rules[this.selectedIndex], this.rules[this.selectedIndex + 1]] = 
+      [this.rules[this.selectedIndex + 1], this.rules[this.selectedIndex]];
+      this.selectedIndex++;
+    }
+  },
+
+  isValidWildcard(pattern) {
+    try {
+      const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+      const regexStr = '^' + escaped.replace(/\*/g, '.*').replace(/\?/g, '.') + '$';
+      new RegExp(regexStr);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  },
+};
+
+/**
+ * アプリケーション全体を管理するモジュール
+ */
+const App = {
+  async init() {
+    UIManager.localize();
+    await RuleManager.load();
+    
+    UIManager.elements.historyCountInput.value = RuleManager.historyCount;
+    this.updateRulesUI();
+    this.updateHistoryUI();
+    this.addEventListeners();
+  },
+
+  addEventListeners() {
+    const { elements } = UIManager;
+    elements.rulesListBox.addEventListener('change', this.handleRuleSelect.bind(this));
+    elements.addOrUpdateRuleBtn.addEventListener('click', this.handleSaveRule.bind(this));
+    elements.deleteRuleBtn.addEventListener('click', this.handleDeleteRule.bind(this));
+    elements.moveUpRuleBtn.addEventListener('click', this.handleMoveRuleUp.bind(this));
+    elements.moveDownRuleBtn.addEventListener('click', this.handleMoveRuleDown.bind(this));
+    elements.testRuleBtn.addEventListener('click', this.handleTestRule.bind(this));
+    elements.changeHistoryCountBtn.addEventListener('click', this.handleChangeHistoryCount.bind(this));
+  },
+
+  updateRulesUI() {
+    UIManager.renderRulesList(RuleManager.rules, RuleManager.selectedIndex);
+    const selectedRule = RuleManager.get(RuleManager.selectedIndex);
+    UIManager.fillRuleDetail(selectedRule);
+    UIManager.updateAddOrUpdateButtonLabel(RuleManager.selectedIndex === -1);
+  },
+
+  async updateHistoryUI(hightlightRule = () => false) {
+    const { history } = await chrome.storage.local.get({ history: [] });
+    const itemsToShow = history.slice(0, RuleManager.historyCount);
+    UIManager.renderDownloadHistory(itemsToShow, this.handleAddToRuleFromHistory.bind(this), hightlightRule);
+  },
+
+  handleRuleSelect(e) {
+    RuleManager.selectedIndex = parseInt(e.target.value, 10);
+    this.updateRulesUI();
+  },
+
+  async handleSaveRule() {
+    const ruleData = UIManager.getRuleDataFromForm();
+
+    if (!ruleData.name) {
+      alert(chrome.i18n.getMessage('ruleNameRequired') || 'ルール名を入力してください。');
+      UIManager.elements.ruleNameInput.focus();
+      return;
+    }
+    if (ruleData.urlPattern && !RuleManager.isValidWildcard(ruleData.urlPattern)) {
+        alert('URLパターンの形式が正しくありません。');
+        UIManager.elements.urlPatternInput.focus();
+        return;
+    }
+    // 他のパターンのバリデーションも同様に追加...
+
+    if (RuleManager.selectedIndex === -1) {
+      RuleManager.add(ruleData);
+    } else {
+      RuleManager.update(ruleData);
+    }
+    await RuleManager.save();
+    this.updateRulesUI();
+    UIManager.elements.rulesListBox.focus();
+  },
+
+  async handleDeleteRule() {
+    if (RuleManager.selectedIndex !== -1) {
+      RuleManager.delete();
+      await RuleManager.save();
+      this.updateRulesUI();
+      UIManager.elements.rulesListBox.focus();
+    }
+  },
+
+  async handleMoveRuleUp() {
+    RuleManager.moveUp();
+    await RuleManager.save();
+    this.updateRulesUI();
+    UIManager.elements.rulesListBox.focus();
+  },
+
+  async handleMoveRuleDown() {
+    RuleManager.moveDown();
+    await RuleManager.save();
+    this.updateRulesUI();
+    UIManager.elements.rulesListBox.focus();
+  },
+  
+  handleTestRule() {
+    const testRuleData = UIManager.getRuleDataFromForm();
+    // downloadRule.jsが必要になるため、一時的に簡易なオブジェクトを作成
+    const testRule = {
+        ...testRuleData,
+        match(item) {
+            const re = (pattern) => new RegExp('^' + pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+            if (this.urlPattern && !re(this.urlPattern).test(item.url)) return false;
+            if (this.filePattern && !re(this.filePattern).test(item.filename)) return false;
+            if (this.mimePattern && !re(this.mimePattern).test(item.mime)) return false;
+            return true;
+        }
+    };
+    this.updateHistoryUI(item => testRule.match(item));
+  },
+
+  handleAddToRuleFromHistory(item) {
+    RuleManager.selectedIndex = -1;
+    UIManager.fillRuleFormFromHistory(item);
+    UIManager.updateAddOrUpdateButtonLabel(true);
+    UIManager.elements.ruleNameInput.focus();
+  },
+
+  async handleChangeHistoryCount() {
+    const value = parseInt(UIManager.elements.historyCountInput.value, 10);
+    if (!isNaN(value) && value > 0 && value <= 100) {
+      RuleManager.historyCount = value;
+      await chrome.storage.local.set({ historyCount: value });
+      this.updateHistoryUI();
+    }
+  },
+};
+
+// --- Initialization ----------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+});
