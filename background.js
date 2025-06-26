@@ -7,6 +7,14 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.downloads.onCreated.addListener((downloadItem) => {
   console.log('新しいダウンロード:', downloadItem);
+  // 履歴に追加する処理をこちらに移動
+  chrome.storage.local.get({ history: [] }, (result) => {
+    const history = result.history;
+    // downloadItemには完全な情報が含まれている
+    history.unshift(downloadItem);
+    if (history.length > 100) history.length = 100;
+    chrome.storage.local.set({ history });
+  });
 });
 
 let cachedRules = [];
@@ -39,13 +47,6 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
     suggest();
     console.log('rule unmatch:', item);
   }
-  // 履歴に追加
-  chrome.storage.local.get({ history: [] }, (result) => {
-    const history = result.history;
-    history.unshift(item);
-    if (history.length > 100) history.length = 100;
-    chrome.storage.local.set({ history });
-  });
 });
 
 
