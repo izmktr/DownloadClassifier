@@ -17,10 +17,13 @@
 function getDownloadsList() {
   chrome.downloads.search({limit: 20, orderBy: ['-startTime']}, function(items) {
       const list = document.getElementById('downloads-list');
-      list.innerHTML = '';
+      if (!list) return;
+      list.replaceChildren(); // より安全な方法でリストをクリア
       items.forEach(item => {
           const li = document.createElement('li');
-          li.textContent = `${item.filename.split(/\\|\//).pop()} [${item.mime}]`;
+          const fileName = item.filename.split(/\\|\//).pop();
+          //const mimeType = item.mime || 'N/A';
+          li.textContent = `${fileName}`;
           list.appendChild(li);
       });
   });
