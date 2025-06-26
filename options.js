@@ -196,11 +196,18 @@ function showDownloadHistory(hightlightRule = (rule) => false) {
     const items = data.history;
     const list = document.getElementById('downloadHistory');
     if (!list) return;
-    list.innerHTML = '';
+    
+    // --- 安全なDOM操作に書き換え ---
+    list.innerHTML = ''; // まずリストをクリア
+
     if (!items || items.length === 0) {
-      list.innerHTML = '<li>ダウンロード履歴がありません。</li>';
+      const li = document.createElement('li');
+      li.textContent = 'ダウンロード履歴がありません。';
+      list.appendChild(li);
       return;
     }
+    // --- ここまで ---
+
     items.slice(0, downloadHistoryCount).forEach(item => {
       const li = document.createElement('li');
       const fileName = item.filename ? item.filename.split(/[\\/]/).pop() : '';
