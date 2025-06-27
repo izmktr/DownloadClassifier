@@ -3,17 +3,244 @@ body {
   background: #f8f8f8;
   margin: 0;
   padding: 1em;
+  line-height: 1.6; /* Improve readability */
 }
-fieldset {
+
+/* Overall form container for max-width and centering */
+form#optionsForm {
+  max-width: 800px; /* フォームの最大幅を制限 */
+  margin: 0 auto; /* フォームを中央寄せ */
+}
+
+fieldset.rule-settings-fieldset { /* ルール設定のfieldsetに適用 */
   border: 1px solid #ccc;
   padding: 1em;
+  margin-bottom: 1.5em; /* Add space below fieldset */
+  border-radius: 8px; /* Slightly rounded corners */
+}
+legend {
+  font-weight: bold;
+  padding: 0 0.5em;
+  color: #333;
 }
 label {
   display: block;
   margin-bottom: 0.5em;
+  font-weight: 500;
+  color: #555;
 }
 input[type="text"] {
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 0.5em;
+  padding: 0.6em 0.8em; /* Add padding for better input feel */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+button:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Layout for rule management section */
+.rule-management-container { /* options.htmlでこのクラスを適用 */
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  justify-content: flex-start; /* アイテムを左寄せ */
+}
+
+.rule-list-section, .rule-details-section {
+  /* flex: 1; を削除し、個々のカラムが過度に伸びるのを防ぐ */
+  flex-basis: 45%; /* ベースとなる幅を設定 */
+  min-width: 280px; /* Ensure minimum width before wrapping */
+  max-width: 400px; /* 個々のカラムの最大幅を制限 */
+}
+
+select#rulesListBox {
+  width: 100%; /* Make select box fill available width */
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5em;
+  font-size: 1em;
+}
+
+/* General button styling */
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-right: 8px; /* Space between buttons */
+  margin-bottom: 8px; /* Space for wrapped buttons */
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:active {
+  background-color: #004085;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Download history section */
+/* Styles for download history list (shared with popup) */
+.downloads-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  max-height: 400px;
+  overflow-y: auto;
+  min-height: 100px; /* Ensure it's visible even if empty */
+}
+
+.downloads-list li {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.downloads-list li:last-child {
+  border-bottom: none;
+}
+
+.file-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.file-name-wrapper { /* For options page */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.file-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-status.interrupted {
+  color: red;
+}
+
+.file-details {
+  font-size: 0.8em;
+  color: #666;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.details-right {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.file-time::before {
+  content: "•";
+  margin: 0 0.5em;
+  color: #bbb;
+}
+
+.add-rule-btn { /* Style for the button inside history list */
+  font-size: 0.8em;
+  padding: 2px 8px;
+  margin-left: 10px;
+  flex-shrink: 0;
+  background-color: #6c757d; /* A more subtle color */
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-rule-btn:hover {
+  background-color: #5a6268;
+}
+
+.history-section-container {
+  max-width: 800px; /* フォームの最大幅と合わせる */
+  margin: 0 auto;   /* 中央寄せ */
+}
+
+#historyCountContainer {
+  margin-top: 1em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#historyCountInput {
+  width: 60px;
+  padding: 0.6em 0.8em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+/* Raw data display */
+#rawData {
+  background:#f4f4f4;
+  padding:1em; /* Increased padding */
+  border:1px solid #ccc;
+  max-width:100%;
+  overflow:auto;
+  white-space: pre-wrap; /* Ensure pre-wrap for long lines */
+  word-break: break-all; /* Break long words */
+  border-radius: 4px;
+}
+
+/* General section spacing for h2 */
+h2 {
+  margin-top: 2em; /* More space above section titles */
+  margin-bottom: 1em;
+  color: #333;
+}
+
+/* Debug link styling */
+a#debugLink {
+  display: block;
+  margin-top: 2em;
+  text-align: center;
+  color: #007bff;
+  text-decoration: none;
+}
+
+a#debugLink:hover {
+  text-decoration: underline;
 }

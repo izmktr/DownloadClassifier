@@ -23,5 +23,7 @@
   "sendFolderPh": { "message": "例: images" },
   "urlPatternPh": { "message": "例: *://*.example.com/*" },
   "filePatternPh": { "message": "例: *.jpg" },
-  "mimePh": { "message": "例: image/png" }
+  "mimePh": { "message": "例: image/png" },
+  "noDownloadHistory": { "message": "ダウンロード履歴がありません。" },
+  "addRuleWithThisFile": { "message": "このファイルでルール追加" }
 }

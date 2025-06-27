@@ -8,11 +8,11 @@
 <body>
   <h1 data-i18n="extOptionsTitle">拡張機能の設定</h1>
   <form id="optionsForm">
-    <fieldset>
+    <fieldset class="rule-settings-fieldset">
       <legend data-i18n="ruleLegend">ルール</legend>
-      <div style="display: flex; gap: 24px;">
-        <!-- 左：ルール一覧リストボックス -->
-        <div>
+      <div class="rule-management-container">
+        <!-- Left: Rule list box -->
+        <div class="rule-list-section">
           <label for="rulesListBox" data-i18n="rulesList">ルール一覧</label><br>
           <select id="rulesListBox" size="8" style="min-width: 160px;"></select>
           <br>
@@ -20,8 +20,8 @@
           <button type="button" id="moveDownRuleBtn" data-i18n="moveDown">↓</button>
           <button type="button" id="deleteRuleBtn" data-i18n="delete">削除</button>
         </div>
-        <!-- 右：ルール詳細入力 -->
-        <div>
+        <!-- Right: Rule details input -->
+        <div class="rule-details-section">
           <label data-i18n="ruleName">ルール名</label>
             <input type="text" id="ruleName" data-i18n-ph="ruleNamePh" placeholder="例: example.com">
           <br>
@@ -44,16 +44,18 @@
     </fieldset>
   </form>
 
-  <h2 data-i18n="downloadHistory">過去のダウンロード情報</h2>
-  <ul id="downloadHistory" style="background:#f9f9f9; padding:8px; border:1px solid #ccc; max-width:100%; overflow:auto;"></ul>
-  <div style="margin-top:1em;">
-    <input type="number" id="historyCountInput" min="1" max="100" value="20" style="width:60px;">
-    <button type="button" id="changeHistoryCountBtn">件数を変更</button>
+  <div class="history-section-container">
+    <h2 data-i18n="downloadHistory">ダウンロード履歴</h2>
+    <ul id="downloadHistory" class="downloads-list"></ul>
+    <div id="historyCountContainer">
+      <input type="number" id="historyCountInput" min="1" max="100" value="20">
+      <button type="button" id="changeHistoryCountBtn">件数を変更</button>
+    </div>
   </div>
 
   <script src="downloadRule.js"></script>
   <script src="options.js"></script>
 
-  <a href="debug.html" id="debugLink" data-i18n="debugLink">デバッグ画面へ</a>
+  <a href="debug.html" id="debugLink" data-i18n="debugLink">__MSG_debugLink__</a>
 </body>
 </html>

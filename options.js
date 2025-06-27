@@ -2,6 +2,92 @@
 
 // --- Modules -----------------------------------------------------------------
 
+// --- Helper Functions (copied from popup.js) ---
+
+/**
+ * ファイルサイズを人間が読みやすい形式に変換します。
+ * @param {number} bytes - バイト単位のファイルサイズ。
+ * @param {number} [decimals=2] - 小数点以下の桁数。
+ * @returns {string} - フォーマットされたファイルサイズ文字列。
+ */
+function formatBytes(bytes, decimals = 2) {
+  if (!bytes || bytes <= 0) return '';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+/**
+ * ISO形式の日時文字列を相対的な時間（例: 「5分前」）に変換します。
+ * @param {string} isoString - ISO 8601形式の日時文字列。
+ * @returns {string} - フォーマットされた相対時間文字列。
+ */
+function formatTimeAgo(isoString) {
+  const date = new Date(isoString);
+  const now = new Date();
+  const seconds = Math.round((now - date) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  const rtf = new Intl.RelativeTimeFormat(chrome.i18n.getUILanguage(), { numeric: 'auto' });
+
+  if (seconds < 60) return rtf.format(-seconds, 'second');
+  if (minutes < 60) return rtf.format(-minutes, 'minute');
+  if (hours < 24) return rtf.format(-hours, 'hour');
+  return rtf.format(-days, 'day');
+}
+
+/**
+ * URLからホスト名を取得します。
+ * @param {string} url - URL文字列。
+ * @returns {string} - ホスト名。
+ */
+function getDomain(url) {
+  if (!url) return '';
+  try {
+    if (url.startsWith('data:')) return 'Data URL';
+    if (url.startsWith('blob:')) {
+      const originUrl = url.substring(5);
+      return `blob:(${new URL(originUrl).hostname})`;
+    }
+    return new URL(url).hostname;
+  } catch (e) {
+    return 'Local';
+  }
+}
+
+/**
+ * ダウンロード項目に基づいて表示するアイコンのパスを返します。
+ * @param {chrome.downloads.DownloadItem} item - ダウンロードアイテム。
+ * @returns {string} - アイコンファイルのパス。
+ */
+function getFileIcon(item) {
+  const mime = item.mime;
+  if (!mime) return 'icons/file-generic.svg';
+  if (mime.startsWith('image/')) return 'icons/image.svg';
+  if (mime.startsWith('audio/')) return 'icons/music.svg';
+  if (mime.startsWith('video/')) return 'icons/video.svg';
+  if (mime.startsWith('text/')) return 'icons/file-text.svg';
+  if (mime === 'application/pdf') return 'icons/file-text.svg';
+  if (['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed', 'application/gzip', 'application/x-bzip2'].includes(mime)) {
+    return 'icons/archive.svg';
+  }
+  return 'icons/file-generic.svg';
+}
+
+/**
+ * chrome.downloads.searchをPromise化する
+ * @param {chrome.downloads.DownloadQuery} query - 検索クエリ
+ * @returns {Promise<chrome.downloads.DownloadItem[]>}
+ */
+function searchDownloads(query) {
+  return new Promise(resolve => {
+    chrome.downloads.search(query, resolve);
+  });
+}
 /**
  * UIに関する操作を担当するモジュール
  */
@@ -91,30 +177,76 @@ const UIManager = {
     if (!historyItems || historyItems.length === 0) {
       const li = document.createElement('li');
       li.textContent = chrome.i18n.getMessage('noDownloadHistory') || 'ダウンロード履歴がありません。';
+      li.style.padding = '1em';
+      li.style.textAlign = 'center';
+      li.style.color = '#666';
       downloadHistory.appendChild(li);
       return;
     }
 
     historyItems.forEach(item => {
       const li = document.createElement('li');
-      const fileName = item.filename ? item.filename.split(/[\\/]/).pop() : '';
-
-      const addBtn = document.createElement('button');
-      addBtn.textContent = chrome.i18n.getMessage('addRuleWithThisFile') || 'このファイルでルール追加';
-      addBtn.style.marginRight = '8px';
-      addBtn.addEventListener('click', () => onAddToRuleClick(item));
-      li.appendChild(addBtn);
-
-      let urlDisplay = item.url || '';
-      if (urlDisplay.startsWith('data:')) {
-        urlDisplay = 'DATA URL';
-      }
-      
       if (hightlightRule(item)) {
         li.style.background = 'yellow';
       }
 
-      li.appendChild(document.createTextNode(`${fileName} [${urlDisplay}]`));
+      const icon = document.createElement('img');
+      icon.className = 'file-icon';
+      icon.src = getFileIcon(item);
+
+      const fileInfo = document.createElement('div');
+      fileInfo.className = 'file-info';
+
+      // Wrapper for filename and button
+      const fileNameWrapper = document.createElement('div');
+      fileNameWrapper.className = 'file-name-wrapper';
+
+      const fileNameDiv = document.createElement('div');
+      fileNameDiv.className = 'file-name';
+      const fileName = item.filename ? item.filename.split(/\\|\//).pop() : '(unknown)';
+      fileNameDiv.textContent = fileName;
+      fileNameDiv.title = item.filename;
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-rule-btn';
+      addBtn.textContent = chrome.i18n.getMessage('addRuleWithThisFile') || 'このファイルでルール追加';
+      addBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent li click event if any
+        onAddToRuleClick(item);
+      });
+
+      fileNameWrapper.appendChild(fileNameDiv);
+      fileNameWrapper.appendChild(addBtn);
+
+      // Details section
+      const fileDetails = document.createElement('div');
+      fileDetails.className = 'file-details';
+
+      const statusSpan = document.createElement('span');
+      statusSpan.className = `file-status ${item.state}`;
+      statusSpan.textContent = item.state === 'complete' ? formatBytes(item.fileSize) : (item.error || item.state);
+
+      const detailsRight = document.createElement('span');
+      detailsRight.className = 'details-right';
+
+      const domainSpan = document.createElement('span');
+      domainSpan.className = 'file-domain';
+      domainSpan.textContent = getDomain(item.url);
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'file-time';
+      timeSpan.textContent = item.startTime ? formatTimeAgo(item.startTime) : '';
+
+      detailsRight.appendChild(domainSpan);
+      detailsRight.appendChild(timeSpan);
+      fileDetails.appendChild(statusSpan);
+      fileDetails.appendChild(detailsRight);
+
+      fileInfo.appendChild(fileNameWrapper);
+      fileInfo.appendChild(fileDetails);
+
+      li.appendChild(icon);
+      li.appendChild(fileInfo);
       downloadHistory.appendChild(li);
     });
   },
@@ -266,7 +398,7 @@ const App = {
     
     UIManager.elements.historyCountInput.value = RuleManager.historyCount;
     this.updateRulesUI();
-    this.updateHistoryUI();
+    await this.updateHistoryUI();
     this.addEventListeners();
   },
 
@@ -289,9 +421,11 @@ const App = {
   },
 
   async updateHistoryUI(hightlightRule = () => false) {
-    const { history } = await chrome.storage.local.get({ history: [] });
-    const itemsToShow = history.slice(0, RuleManager.historyCount);
-    UIManager.renderDownloadHistory(itemsToShow, this.handleAddToRuleFromHistory.bind(this), hightlightRule);
+    const items = await searchDownloads({
+      limit: RuleManager.historyCount,
+      orderBy: ['-startTime']
+    });
+    UIManager.renderDownloadHistory(items, this.handleAddToRuleFromHistory.bind(this), hightlightRule);
   },
 
   handleRuleSelect(e) {
@@ -347,25 +481,36 @@ const App = {
     UIManager.elements.rulesListBox.focus();
   },
   
-  handleTestRule() {
+  async handleTestRule() {
     const testRuleData = UIManager.getRuleDataFromForm();
-    // downloadRule.jsが必要になるため、一時的に簡易なオブジェクトを作成
-    const testRule = {
-        ...testRuleData,
-        match(item) {
-            const re = (pattern) => new RegExp('^' + pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
-            if (this.urlPattern && !re(this.urlPattern).test(item.url)) return false;
-            if (this.filePattern && !re(this.filePattern).test(item.filename)) return false;
-            if (this.mimePattern && !re(this.mimePattern).test(item.mime)) return false;
-            return true;
-        }
+    const testRule = new DownloadRule(testRuleData);
+
+    // ストレージからonCreated時の履歴データを事前に取得
+    const { history } = await chrome.storage.local.get({ history: [] });
+
+    // ハイライト判定用の関数を定義
+    const hightlightRule = (latestItem) => {
+      // 表示用のlatestItemのIDを使って、ストレージから保存された元の情報を探す
+      const originalItem = history.find(item => item.id === latestItem.id);
+
+      // ルール判定には、originalItem（ダウンロード開始直後の情報）を優先して使用する
+      const itemToTest = originalItem || latestItem;
+      return testRule.match(itemToTest);
     };
-    this.updateHistoryUI(item => testRule.match(item));
+    await this.updateHistoryUI(hightlightRule);
   },
 
-  handleAddToRuleFromHistory(item) {
+  async handleAddToRuleFromHistory(latestItem) {
+    // 表示に使ったのは最新のItemだが、ルール作成にはonCreated時の情報を使いたい
+    // ストレージからIDで元の情報を検索する
+    const { history } = await chrome.storage.local.get({ history: [] });
+    const originalItem = history.find(item => item.id === latestItem.id);
+
+    // onCreated時の情報があればそれを使い、なければ最新情報でフォールバック
+    const itemForRule = originalItem || latestItem;
+
     RuleManager.selectedIndex = -1;
-    UIManager.fillRuleFormFromHistory(item);
+    UIManager.fillRuleFormFromHistory(itemForRule);
     UIManager.updateAddOrUpdateButtonLabel(true);
     UIManager.elements.ruleNameInput.focus();
   },
@@ -375,7 +520,7 @@ const App = {
     if (!isNaN(value) && value > 0 && value <= 100) {
       RuleManager.historyCount = value;
       await chrome.storage.local.set({ historyCount: value });
-      this.updateHistoryUI();
+      await this.updateHistoryUI();
     }
   },
 };
