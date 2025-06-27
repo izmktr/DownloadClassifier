@@ -30,6 +30,7 @@
   "addRuleWithThisFile": { "message": "Add rule with this file" },
   "ruleNameRequired": { "message": "Rule name is required." },
   "urlPatternInvalid": { "message": "Invalid URL pattern format." },
-  "debugLink": { "message": "debug" },
-  "ruleOrderNote": { "message": "Rules are applied in order from top to bottom." }
+  "debugLink": { "message": "Debug" },
+  "ruleOrderNote": { "message": "Rules are applied in order from top to bottom." },
+  "changeHistoryCountButton": { "message": "Change History Count" }
 }

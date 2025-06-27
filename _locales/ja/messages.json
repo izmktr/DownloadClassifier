@@ -31,5 +31,6 @@
   "ruleNameRequired": { "message": "ルール名を入力してください。" },
   "urlPatternInvalid": { "message": "URLパターンの形式が正しくありません。" },
   "debugLink": { "message": "debug画面" },
-  "ruleOrderNote": { "message": "ルールは上から順に適用されます。" }
+  "ruleOrderNote": { "message": "ルールは上から順に適用されます。" },
+  "changeHistoryCountButton": { "message": "履歴件数変更" }
 }
