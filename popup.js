@@ -30,6 +30,28 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 /**
+ * ISO形式の日時文字列を相対的な時間（例: 「5分前」）に変換します。
+ * @param {string} isoString - ISO 8601形式の日時文字列。
+ * @returns {string} - フォーマットされた相対時間文字列。
+ */
+function formatTimeAgo(isoString) {
+  const date = new Date(isoString);
+  const now = new Date();
+  const seconds = Math.round((now - date) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  // ブラウザの国際化APIを使用して、ロケールに合わせた表示を生成
+  const rtf = new Intl.RelativeTimeFormat('ja', { numeric: 'auto' });
+
+  if (seconds < 60) return rtf.format(-seconds, 'second');
+  if (minutes < 60) return rtf.format(-minutes, 'minute');
+  if (hours < 24) return rtf.format(-hours, 'hour');
+  return rtf.format(-days, 'day');
+}
+
+/**
  * URLからホスト名を取得します。
  * @param {string} url - URL文字列。
  * @returns {string} - ホスト名。
@@ -45,7 +67,7 @@ function getDomain(url) {
     if (url.startsWith('blob:')) {
       // 'blob:' を取り除いた部分でURLを再解析
       const originUrl = url.substring(5);
-      return `[blob] ${new URL(originUrl).hostname}`;
+      return `blob:(${new URL(originUrl).hostname})`;
     }
     return new URL(url).hostname;
   } catch (e) {
@@ -85,6 +107,61 @@ function getFileIcon(item) {
   return 'icons/file-generic.svg'; // デフォルトアイコン
 }
 
+/**
+ * 1つのダウンロードアイテムに対応するリスト要素（<li>）を作成します。
+ * @param {chrome.downloads.DownloadItem} item - ダウンロードアイテム。
+ * @returns {HTMLLIElement} - 生成されたリストアイテム要素。
+ */
+function createDownloadListItem(item) {
+  const li = document.createElement('li');
+  li.dataset.downloadId = item.id;
+  li.addEventListener('click', () => {
+    chrome.downloads.show(item.id);
+  });
+
+  const icon = document.createElement('img');
+  icon.className = 'file-icon';
+  icon.src = getFileIcon(item);
+
+  const fileInfo = document.createElement('div');
+  fileInfo.className = 'file-info';
+
+  const fileNameDiv = document.createElement('div');
+  fileNameDiv.className = 'file-name';
+  const fileName = item.filename.split(/\\|\//).pop();
+  fileNameDiv.textContent = fileName;
+  fileNameDiv.title = item.filename; // フルパスをツールチップで表示
+
+  const fileDetails = document.createElement('div');
+  fileDetails.className = 'file-details';
+
+  const statusSpan = document.createElement('span');
+  statusSpan.className = `file-status ${item.state}`;
+  statusSpan.textContent = item.state === 'complete' ? formatBytes(item.fileSize) : (item.error || item.state);
+
+  const detailsRight = document.createElement('span');
+  detailsRight.className = 'details-right';
+
+  const domainSpan = document.createElement('span');
+  domainSpan.className = 'file-domain';
+  domainSpan.textContent = getDomain(item.url);
+
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'file-time';
+  timeSpan.textContent = formatTimeAgo(item.startTime);
+
+  detailsRight.appendChild(domainSpan);
+  detailsRight.appendChild(timeSpan);
+  fileDetails.appendChild(statusSpan);
+  fileDetails.appendChild(detailsRight);
+  fileInfo.appendChild(fileNameDiv);
+  fileInfo.appendChild(fileDetails);
+  li.appendChild(icon);
+  li.appendChild(fileInfo);
+
+  return li;
+}
+
 function getDownloadsList() {
   chrome.downloads.search({limit: 20, orderBy: ['-startTime']}, function(items) {
       const list = document.getElementById('downloads-list');
@@ -92,44 +169,7 @@ function getDownloadsList() {
       list.replaceChildren(); // より安全な方法でリストをクリア
 
       items.forEach(item => {
-          const li = document.createElement('li');
-
-           const icon = document.createElement('img');
-           icon.className = 'file-icon';
-           icon.src = getFileIcon(item);
-
-           const fileInfo = document.createElement('div');
-           fileInfo.className = 'file-info';
-
-           const fileNameDiv = document.createElement('div');
-           fileNameDiv.className = 'file-name';
-          const fileName = item.filename.split(/\\|\//).pop();
-           fileNameDiv.textContent = fileName;
-           fileNameDiv.title = item.filename; // フルパスをツールチップで表示
-
-           const fileDetails = document.createElement('div');
-           fileDetails.className = 'file-details';
-
-           const statusSpan = document.createElement('span');
-           statusSpan.className = `file-status ${item.state}`;
-           statusSpan.textContent = item.state === 'complete' ? formatBytes(item.fileSize) : (item.error || item.state);
-
-           const domainSpan = document.createElement('span');
-           domainSpan.className = 'file-domain';
-           domainSpan.textContent = getDomain(item.url);
-
-           fileDetails.appendChild(statusSpan);
-           fileDetails.appendChild(domainSpan);
-           fileInfo.appendChild(fileNameDiv);
-           fileInfo.appendChild(fileDetails);
-           li.appendChild(icon);
-           li.appendChild(fileInfo);
-
-          // ダウンロードIDをデータ属性として保存
-          li.dataset.downloadId = item.id;
-          li.addEventListener('click', () => {
-            chrome.downloads.show(item.id);
-          });
+          const li = createDownloadListItem(item);
           list.appendChild(li);
       });
   });

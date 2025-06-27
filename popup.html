@@ -63,11 +63,25 @@
       overflow: hidden;
       text-overflow: ellipsis; /* はみ出したファイル名を...で表示 */
     }
+    .file-status.interrupted {
+      color: red; /* 失敗したダウンロードを赤色で表示 */
+    }
     .file-details {
       font-size: 0.8em;
       color: #666;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+    }
+    .details-right {
+      display: flex;
+      align-items: center;
+      white-space: nowrap; /* ドメインと日時が改行されないように */
+    }
+    .file-time::before {
+      content: "•";
+      margin: 0 0.5em; /* 日時とドメインの間に区切り文字と余白を設ける */
+      color: #bbb;
     }
     #downloads-list {
       list-style: none;
