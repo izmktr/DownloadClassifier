@@ -38,6 +38,16 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   // onDeterminingFilenameで得られたより正確なMIMEタイプで履歴を更新
+  const matched = cachedRules.find(rule => rule.match(item));
+  if (matched && matched.folder) {
+    const filename = item.filename.split(/[\\/]/).pop();
+    const newfilepath = `${matched.folder}/${filename}`;
+    suggest({ filename: newfilepath });
+    console.log('rule match:', matched, item, newfilepath);
+  } else {
+    suggest();
+    console.log('rule unmatch:', item);
+  }
   chrome.storage.local.get({ history: [] }, (result) => {
     const history = result.history;
     const historyItemIndex = history.findIndex(h => h.id === item.id);
@@ -58,15 +68,4 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
       if (needsUpdate) chrome.storage.local.set({ history });
     }
   });
-
-  const matched = cachedRules.find(rule => rule.match(item));
-  if (matched && matched.folder) {
-    const filename = item.filename.split(/[\\/]/).pop();
-    const newfilepath = `${matched.folder}/${filename}`;
-    suggest({ filename: newfilepath });
-    console.log('rule match:', matched, item, newfilepath);
-  } else {
-    suggest();
-    console.log('rule unmatch:', item);
-  }
 });
