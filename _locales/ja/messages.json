@@ -14,7 +14,7 @@
   "add": { "message": "追加" },
   "update": { "message": "更新" },
   "status": { "message": "保存内容（Rawデータ）" },
-  "downloadHistory": { "message": "過去のダウンロード情報" },
+  "downloadHistory": { "message": "ダウンロード履歴" },
   "popupTitle": { "message": "ポップアップ" },
   "showOptions": { "message": "オプションを表示" },
   "newRule": { "message": "新規ルール" },
