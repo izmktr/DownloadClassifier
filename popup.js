@@ -100,7 +100,7 @@ function getFileIcon(item) {
   if (mime === 'application/pdf') {
     return 'icons/file-text.svg'; // PDFはテキストアイコンで代用
   }
-  if (['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed', 'application/gzip', 'application/x-bzip2'].includes(mime)) {
+  if (['application/zip', 'application/x-zip-compressed', 'application/x-rar-compressed', 'application/x-7z-compressed', 'application/gzip', 'application/x-bzip2'].includes(mime)) {
     return 'icons/archive.svg';
   }
 
