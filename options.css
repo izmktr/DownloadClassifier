@@ -251,6 +251,12 @@ button:disabled {
   gap: 10px;
 }
 
+#historyCountContainer button {
+  padding: 0.6em 0.8em; /* 入力フィールドのパディングと揃える */
+  font-size: 1em; /* 入力フィールドのフォントサイズと揃える */
+  margin-bottom: 0; /* 一般的なボタンのbottom-marginをリセット */
+}
+
 #historyCountInput {
   width: 60px;
   padding: 0.6em 0.8em;
