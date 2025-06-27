@@ -22,7 +22,7 @@ let cachedRules = [];
 function updateRulesCache() {
   chrome.storage.local.get(['rules'], (result) => {
     cachedRules = (result.rules || []).map(r => new DownloadRule(r));
-    //console.log('loaded', cachedRules);
+    console.log('loaded', cachedRules);
   });
 }
 
