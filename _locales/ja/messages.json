@@ -30,5 +30,6 @@
   "addRuleWithThisFile": { "message": "このファイルでルール追加" },
   "ruleNameRequired": { "message": "ルール名を入力してください。" },
   "urlPatternInvalid": { "message": "URLパターンの形式が正しくありません。" },
-  "debugLink": { "message": "debug画面" }
+  "debugLink": { "message": "debug画面" },
+  "ruleOrderNote": { "message": "ルールは上から順に適用されます。" }
 }
