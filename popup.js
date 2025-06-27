@@ -41,6 +41,12 @@ function getDomain(url) {
     if (url.startsWith('data:')) {
       return 'Data URL';
     }
+    // blob: URLを考慮
+    if (url.startsWith('blob:')) {
+      // 'blob:' を取り除いた部分でURLを再解析
+      const originUrl = url.substring(5);
+      return `[blob] ${new URL(originUrl).hostname}`;
+    }
     return new URL(url).hostname;
   } catch (e) {
     // ローカルファイルパスなどの場合
