@@ -37,7 +37,7 @@ const UIManager = {
 
     const newOption = document.createElement('option');
     newOption.value = '-1';
-    newOption.textContent = chrome.i18n.getMessage('newRule') || '(新規)';
+    newOption.textContent = chrome.i18n.getMessage('newRule') || '(新規ルール)';
     rulesListBox.appendChild(newOption);
 
     rules.forEach((rule, idx) => {

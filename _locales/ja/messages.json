@@ -19,7 +19,7 @@
   "downloadHistory": { "message": "ダウンロード履歴" },
   "popupTitle": { "message": "ポップアップ" },
   "showOptions": { "message": "オプションを表示" },
-  "newRule": { "message": "新規ルール" },
+  "newRule": { "message": "(新規ルール)" },
   "unnamedRule": { "message": "名称未設定" },
   "test": { "message": "テスト" },
   "ruleNamePh": { "message": "例: example.com" },
