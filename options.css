@@ -6,6 +6,14 @@ body {
   line-height: 1.6; /* Improve readability */
 }
 
+.page-title {
+  max-width: 800px; /* フォームの最大幅と合わせる */
+  margin: 0 auto 1em auto; /* 中央寄せと下部のマージン */
+  color: #333;
+  padding-top: 0.5em; /* 上部に少し余白を追加 */
+  font-size: 1.8em; /* タイトルを見やすく */
+}
+
 /* Overall form container for max-width and centering */
 form#optionsForm {
   max-width: 800px; /* フォームの最大幅を制限 */
