@@ -1,4 +1,6 @@
 {
+  "extName": { "message": "DownloadClassifier" },
+  "extDescription": { "message": "A Chrome extension to classify downloads." },
   "extOptionsTitle": { "message": "Extension Settings" },
   "ruleLegend": { "message": "Rules" },
   "rulesList": { "message": "Rule List" },
