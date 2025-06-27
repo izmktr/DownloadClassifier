@@ -15,10 +15,17 @@
         <div class="rule-list-section">
           <label for="rulesListBox" data-i18n="rulesList">ルール一覧</label><br>
           <select id="rulesListBox" size="8" style="min-width: 160px;"></select>
-          <br>
-          <button type="button" id="moveUpRuleBtn" data-i18n="moveUp">↑</button>
-          <button type="button" id="moveDownRuleBtn" data-i18n="moveDown">↓</button>
-          <button type="button" id="deleteRuleBtn" data-i18n="delete">削除</button>
+          <div class="rule-list-controls">
+            <button type="button" id="moveUpRuleBtn" class="rule-icon-button" data-i18n-title="moveUpTooltip">
+              <img src="icons/arrow-up.svg" alt="Move Up">
+            </button>
+            <button type="button" id="moveDownRuleBtn" class="rule-icon-button" data-i18n-title="moveDownTooltip">
+              <img src="icons/arrow-down.svg" alt="Move Down">
+            </button>
+            <button type="button" id="deleteRuleBtn" class="rule-icon-button" data-i18n-title="deleteTooltip">
+              <img src="icons/trash-2.svg" alt="Delete">
+            </button>
+          </div>
         </div>
         <!-- Right: Rule details input -->
         <div class="rule-details-section">

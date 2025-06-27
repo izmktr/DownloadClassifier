@@ -72,6 +72,44 @@ select#rulesListBox {
   font-size: 1em;
 }
 
+/* Rule list controls container */
+.rule-list-controls {
+  margin-top: 8px;
+}
+
+/* Icon buttons for rule list */
+.rule-icon-button {
+  background-color: #007bff; /* デフォルトで青色に */
+  color: white; /* アイコンの色を白に */
+  border: none; /* ボーダーをなくす */
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 4px;
+  transition: background-color 0.2s ease; /* 他のボタンと統一 */
+}
+
+.rule-icon-button:hover {
+  background-color: #0056b3; /* ホバーで濃い青に */
+}
+
+.rule-icon-button:active {
+  background-color: #004085; /* クリックでさらに濃い青に */
+}
+
+.rule-icon-button:disabled {
+  background-color: #cccccc; /* 無効時は灰色に */
+  cursor: not-allowed;
+  opacity: 1; /* 透明度ではなく色で表現 */
+}
+
+.rule-icon-button img {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle; /* Align icon nicely */
+  filter: brightness(0) invert(1); /* アイコンを白にする */
+}
+
 /* General button styling */
 button {
   background-color: #007bff;

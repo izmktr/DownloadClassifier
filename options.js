@@ -316,6 +316,12 @@ const UIManager = {
         el.setAttribute('placeholder', chrome.i18n.getMessage(key) || el.getAttribute('placeholder'));
       }
     });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.getAttribute('data-i18n-title');
+      if (key) {
+        el.title = chrome.i18n.getMessage(key) || '';
+      }
+    });
   },
 };
 
