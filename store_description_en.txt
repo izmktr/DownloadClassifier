@@ -1,0 +1,13 @@
+[Automatically Organize Your Downloads]
+
+Is your "Downloads" folder cluttered with all sorts of files?
+This extension allows you to automatically sort your downloaded files into the right folders based on rules you create.
+
+For example, you can set rules to:
+- Move image files (.jpg, .png) to your "Pictures" folder.
+- Move document files (.pdf, .docx) to your "Documents" folder.
+- Move music files (.mp3) to your "Music" folder.
+
+You can freely customize the destination folder based on file type, keywords in the filename, and more.
+
+Save time organizing your downloads and maintain a tidy workspace with this smart download manager!
