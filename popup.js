@@ -124,6 +124,12 @@ function getDownloadsList() {
            fileInfo.appendChild(fileDetails);
            li.appendChild(icon);
            li.appendChild(fileInfo);
+
+          // ダウンロードIDをデータ属性として保存
+          li.dataset.downloadId = item.id;
+          li.addEventListener('click', () => {
+            chrome.downloads.show(item.id);
+          });
           list.appendChild(li);
       });
   });
