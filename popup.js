@@ -146,17 +146,15 @@ async function updateDownloadsView() {
   if (!downloadsList) return;
   console.log('updateDownloadView called:', downloadsList);
 
-  // 以前の「ダウンロード中」セクションのコンテナが存在すれば削除
-  let inProgressContainer = document.getElementById('in-progress-container');
-  if (inProgressContainer) {
-    inProgressContainer.remove();
-  }
 
   const noDownloadsMessage = document.getElementById('no-downloads-message');
 
+  // chrome.storageからhistoryCountを取得
+  const storageData = await chrome.storage.local.get({ historyCount: 20 });
+  const displayLimit = storageData.historyCount;
+
   // すべての最近のダウンロード（進行中を含む）を取得
-  // limitは適宜調整してください。ここでは20件を取得します。
-  const allRecentDownloads = await searchDownloads({ limit: 20, orderBy: ['-startTime'] });
+  const allRecentDownloads = await searchDownloads({ limit: displayLimit, orderBy: ['-startTime'] });
 
   // リストをクリア
   downloadsList.replaceChildren(); 
