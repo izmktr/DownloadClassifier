@@ -289,10 +289,23 @@ a#debugLink {
   display: block;
   margin-top: 2em;
   text-align: center;
-  color: #007bff;
+  color: #999; /* 目立たない灰色に */
   text-decoration: none;
+  font-size: 0.9em; /* 少し小さく */
+}
+
+/* Debug link container for alignment */
+.debug-link-container {
+  max-width: 800px; /* フォームの最大幅と合わせる */
+  margin: 2em auto 0 auto; /* 中央寄せと上部のマージン */
 }
 
 a#debugLink:hover {
   text-decoration: underline;
+}
+
+a#debugLink {
+  display: block; /* text-alignを適用するためにブロック要素に */
+  text-align: right; /* 右寄せに */
+  margin-top: 0; /* 親コンテナでマージンを設定したのでリセット */
 }
