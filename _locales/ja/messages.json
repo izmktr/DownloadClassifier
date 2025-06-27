@@ -20,10 +20,12 @@
   "newRule": { "message": "新規ルール" },
   "test": { "message": "テスト" },
   "ruleNamePh": { "message": "例: example.com" },
-  "sendFolderPh": { "message": "例: images" },
+  "sendFolderPh": { "message": "例: images (Dowonload/images/ に保存する場合)" },
   "urlPatternPh": { "message": "例: *://*.example.com/*" },
   "filePatternPh": { "message": "例: *.jpg" },
   "mimePh": { "message": "例: image/png" },
   "noDownloadHistory": { "message": "ダウンロード履歴がありません。" },
-  "addRuleWithThisFile": { "message": "このファイルでルール追加" }
+  "addRuleWithThisFile": { "message": "このファイルでルール追加" },
+  "ruleNameRequired": { "message": "ルール名を入力してください。" },
+  "urlPatternInvalid": { "message": "URLパターンの形式が正しくありません。" }
 }
