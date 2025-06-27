@@ -37,11 +37,19 @@ document.getElementById('show-options').addEventListener('click', () => {
 
 // 多言語化: message.jsonの値でUIテキストを置換
 function localizeHtml() {
-  const elements = document.querySelectorAll('[data-i18n]');
-  elements.forEach(el => {
+  // data-i18n 属性を持つ要素のテキストを置換
+  document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (key && chrome.i18n) {
       el.textContent = chrome.i18n.getMessage(key) || el.textContent;
+    }
+  });
+
+  // data-i18n-title 属性を持つ要素のtitle属性を設定
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (key && chrome.i18n) {
+      el.title = chrome.i18n.getMessage(key) || '';
     }
   });
 }
@@ -56,4 +64,3 @@ function localizeTitle() {
   }
 }
 document.addEventListener('DOMContentLoaded', localizeTitle);
-

@@ -3,11 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <title>__MSG_popupTitle__</title>
-  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="options.css"> <!-- 共通スタイルを適用 -->
+  <style>
+    body {
+      min-width: 350px; /* ポップアップの最小幅 */
+      padding: 10px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0; /* h1のデフォルトマージンをリセット */
+    }
+    .icon-button {
+      background: none;
+      border: none;
+      padding: 5px; /* パディングを少し増やしてクリックしやすく */
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-button:hover {
+      background-color: #e0e0e0;
+    }
+    .icon-button img {
+      width: 24px;  /* アイコンを少し大きく */
+      height: 24px; /* アイコンを少し大きく */
+    }
+    #downloads-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 400px; /* リストが長くなりすぎないようにスクロールバーを表示 */
+      overflow-y: auto;
+    }
+  </style>
 </head>
 <body>
-  <h1 data-i18n="downloadHistory">__MSG_downloadHistory__</h1>
-  <button id="show-options" data-i18n="showOptions">__MSG_showOptions__</button>
+  <div class="header">
+    <h1 data-i18n="downloadHistory">__MSG_downloadHistory__</h1>
+    <button id="show-options" class="icon-button" data-i18n-title="showOptions">
+      <img src="icons/gear.svg" alt="Options">
+    </button>
+  </div>
   <ul id="downloads-list"></ul>
   <script src="popup.js"></script>
 </body>
