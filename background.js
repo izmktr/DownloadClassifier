@@ -37,6 +37,28 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+  // onDeterminingFilenameで得られたより正確なMIMEタイプで履歴を更新
+  chrome.storage.local.get({ history: [] }, (result) => {
+    const history = result.history;
+    const historyItemIndex = history.findIndex(h => h.id === item.id);
+    if (historyItemIndex !== -1) {
+      const storedItem = history[historyItemIndex];
+      let needsUpdate = false;
+
+      // MIMEタイプが異なる、または元々空だった場合に更新
+      if (storedItem.mime !== item.mime) {
+        storedItem.mime = item.mime;
+        needsUpdate = true;
+      }
+      // ファイル名が異なる場合に更新
+      if (storedItem.filename !== item.filename) {
+        storedItem.filename = item.filename;
+        needsUpdate = true;
+      }
+      if (needsUpdate) chrome.storage.local.set({ history });
+    }
+  });
+
   const matched = cachedRules.find(rule => rule.match(item));
   if (matched && matched.folder) {
     const filename = item.filename.split(/[\\/]/).pop();
@@ -48,5 +70,3 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
     console.log('rule unmatch:', item);
   }
 });
-
-
