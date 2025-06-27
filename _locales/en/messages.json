@@ -20,12 +20,13 @@
   "newRule": { "message": "New Rule" },
   "test": { "message": "Test" },
   "ruleNamePh": { "message": "e.g. example.com" },
-  "sendFolderPh": { "message": "e.g. images" },
+  "sendFolderPh": { "message": "e.g. images (to save in Downloads/images/)" },
   "urlPatternPh": { "message": "e.g. *://*.example.com/*" },
   "filePatternPh": { "message": "e.g. *.jpg" },
   "mimePh": { "message": "e.g. image/png" },
   "noDownloadHistory": { "message": "No download history." },
   "addRuleWithThisFile": { "message": "Add rule with this file" },
   "ruleNameRequired": { "message": "Rule name is required." },
-  "urlPatternInvalid": { "message": "Invalid URL pattern format." }
+  "urlPatternInvalid": { "message": "Invalid URL pattern format." },
+  "debugLink": { "message": "debug" }
 }
