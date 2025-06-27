@@ -52,6 +52,24 @@ function formatTimeAgo(isoString) {
 }
 
 /**
+ * 残り時間を人間が読みやすい形式に変換します。
+ * @param {number} seconds - 残り秒数。
+ * @returns {string} - フォーマットされた残り時間文字列。
+ */
+function formatTimeRemaining(seconds) {
+  if (seconds < 0) return ''; // 負の値は表示しない
+  if (seconds < 60) {
+    return `${seconds}秒`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes}分`;
+  }
+  const hours = Math.floor(minutes / 60);
+  return `${hours}時間`;
+}
+
+/**
  * URLからホスト名を取得します。
  * @param {string} url - URL文字列。
  * @returns {string} - ホスト名。
@@ -108,6 +126,17 @@ function getFileIcon(item) {
 }
 
 /**
+ * chrome.downloads.searchをPromise化する
+ * @param {chrome.downloads.DownloadQuery} query - 検索クエリ
+ * @returns {Promise<chrome.downloads.DownloadItem[]>}
+ */
+function searchDownloads(query) {
+  return new Promise(resolve => {
+    chrome.downloads.search(query, resolve);
+  });
+}
+
+/**
  * 1つのダウンロードアイテムに対応するリスト要素（<li>）を作成します。
  * @param {chrome.downloads.DownloadItem} item - ダウンロードアイテム。
  * @returns {HTMLLIElement} - 生成されたリストアイテム要素。
@@ -132,6 +161,7 @@ function createDownloadListItem(item) {
   fileNameDiv.textContent = fileName;
   fileNameDiv.title = item.filename; // フルパスをツールチップで表示
 
+
   const fileDetails = document.createElement('div');
   fileDetails.className = 'file-details';
 
@@ -139,7 +169,57 @@ function createDownloadListItem(item) {
   statusSpan.className = `file-status ${item.state}`;
   statusSpan.textContent = item.state === 'complete' ? formatBytes(item.fileSize) : (item.error || item.state);
 
-  const detailsRight = document.createElement('span');
+  let progressBarContainer = null; // プログレスバーコンテナを初期化
+  let progressBar = null; // プログレスバーを初期化
+
+  // ダウンロードの状態に応じて表示を調整
+  if (item.state === 'in_progress') {
+    const received = item.bytesReceived;
+    const total = item.totalBytes;
+    const percentage = total > 0 ? Math.round((received / total) * 100) : 0;
+
+    // プログレスバーのコンテナとバー本体を作成
+    progressBarContainer = document.createElement('div');
+    progressBarContainer.className = 'progress-bar-container';
+    progressBar = document.createElement('div');
+    progressBar.className = 'progress-bar';
+    progressBarContainer.appendChild(progressBar);
+
+    progressBar.style.width = `${percentage}%`;
+    progressBar.classList.add('in-progress');
+
+    let statusText = `${formatBytes(received)} / ${formatBytes(total)}`;
+    if (item.bytesPerSecond > 0) {
+      statusText += ` (${formatBytes(item.bytesPerSecond)}/s)`;
+    }
+    if (item.estimatedEndTime && item.bytesPerSecond > 0) { // 速度が0だと残り時間がおかしくなるため条件追加
+      const remainingSeconds = Math.round((new Date(item.estimatedEndTime).getTime() - new Date().getTime()) / 1000);
+      if (remainingSeconds > 0) {
+        statusText += ` - 残り ${formatTimeRemaining(remainingSeconds)}`;
+      }
+    }
+    statusSpan.textContent = statusText;
+  } else if (item.state === 'complete') {
+    // 完了したファイルにはプログレスバーを表示しないため、ここでは何もしない
+    statusSpan.textContent = formatBytes(item.fileSize);
+  } else if (item.state === 'interrupted') {
+    statusSpan.textContent = item.error || chrome.i18n.getMessage('interruptedStatus') || '中断';
+    // 中断されたファイルにはプログレスバーを表示しない
+    // progressBarContainerとprogressBarはnullのままにする
+  } else if (item.state === 'paused') {
+    statusSpan.textContent = chrome.i18n.getMessage('pausedStatus') || '一時停止中';
+    const percentage = item.totalBytes > 0 ? Math.round((item.bytesReceived / item.totalBytes) * 100) : 0;
+    progressBarContainer = document.createElement('div');
+    progressBarContainer.className = 'progress-bar-container';
+    progressBar = document.createElement('div');
+    progressBar.className = 'progress-bar';
+    progressBarContainer.appendChild(progressBar);
+    progressBar.style.width = `${percentage}%`;
+    progressBar.classList.add('paused');
+  }
+  console.log('item.state:', item.state, 'progressBarContainer:', progressBarContainer, 'progressBar:', progressBar);
+
+  const detailsRight = document.createElement('span'); // 時間とドメイン表示用
   detailsRight.className = 'details-right';
 
   const domainSpan = document.createElement('span');
@@ -156,34 +236,49 @@ function createDownloadListItem(item) {
   fileDetails.appendChild(detailsRight);
   fileInfo.appendChild(fileNameDiv);
   fileInfo.appendChild(fileDetails);
+  if (progressBarContainer) { // progressBarContainerが作成された場合のみ追加
+    fileInfo.appendChild(progressBarContainer);
+  }
   li.appendChild(icon);
   li.appendChild(fileInfo);
 
   return li;
 }
 
-function getDownloadsList() {
-  chrome.downloads.search({limit: 20, orderBy: ['-startTime']}, function(items) {
-      const list = document.getElementById('downloads-list');
-      if (!list) return;
-      const noDownloadsMessage = document.getElementById('no-downloads-message');
+async function updateDownloadsView() {
+  const downloadsList = document.getElementById('downloads-list');
+  if (!downloadsList) return;
+  console.log('updateDownloadView called:', downloadsList);
 
-      list.replaceChildren(); // より安全な方法でリストをクリア
+  // 以前の「ダウンロード中」セクションのコンテナが存在すれば削除
+  let inProgressContainer = document.getElementById('in-progress-container');
+  if (inProgressContainer) {
+    inProgressContainer.remove();
+  }
 
-      if (items.length === 0) {
-        noDownloadsMessage.style.display = 'block';
-      } else {
-        noDownloadsMessage.style.display = 'none';
-        items.forEach(item => {
-            const li = createDownloadListItem(item);
-            list.appendChild(li);
-        });
-      }
-  });
+  const noDownloadsMessage = document.getElementById('no-downloads-message');
+
+  // すべての最近のダウンロード（進行中を含む）を取得
+  // limitは適宜調整してください。ここでは20件を取得します。
+  const allRecentDownloads = await searchDownloads({ limit: 20, orderBy: ['-startTime'] });
+
+  // リストをクリア
+  downloadsList.replaceChildren(); 
+
+  if (allRecentDownloads.length === 0) {
+    noDownloadsMessage.style.display = 'block';
+  } else {
+    noDownloadsMessage.style.display = 'none';
+    // すべてのダウンロードアイテムをdownloadsListに追加
+    allRecentDownloads.forEach(item => {
+      const li = createDownloadListItem(item);
+      downloadsList.appendChild(li);
+    });
+  }
 }
 
 // ダウンロードの状態が変更されたときにリストを更新
-chrome.downloads.onChanged.addListener(getDownloadsList);
+chrome.downloads.onChanged.addListener(updateDownloadsView);
 
 document.getElementById('show-options').addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
@@ -218,5 +313,5 @@ function localizeTitle() {
 document.addEventListener('DOMContentLoaded', () => {
   localizeHtml();
   localizeTitle();
-  getDownloadsList();
+  updateDownloadsView();
 });
