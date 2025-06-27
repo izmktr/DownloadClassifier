@@ -3,94 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>__MSG_popupTitle__</title>
-  <link rel="stylesheet" href="options.css"> <!-- 共通スタイルを適用 -->
-  <style>
-    body {
-      min-width: 350px; /* ポップアップの最小幅 */
-      padding: 10px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    h1 {
-      margin: 0; /* h1のデフォルトマージンをリセット */
-    }
-    .icon-button {
-      background: none;
-      border: none;
-      padding: 5px; /* パディングを少し増やしてクリックしやすく */
-      cursor: pointer;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .icon-button:hover {
-      background-color: #e0e0e0;
-    }
-    .icon-button img {
-      width: 24px;  /* アイコンを少し大きく */
-      height: 24px; /* アイコンを少し大きく */
-    }
-    #downloads-list li {
-      display: flex;
-      align-items: center;
-      padding: 8px 4px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer; /* クリック可能であることを示す */
-    }
-    #downloads-list li:last-child {
-      border-bottom: none;
-    }
-    .file-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 10px;
-      flex-shrink: 0; /* アイコンが縮まないように */
-    }
-    .file-info {
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-      min-width: 0; /* flexアイテムの縮小を許可し、ellipsisを有効にする */
-    }
-    .file-name {
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis; /* はみ出したファイル名を...で表示 */
-    }
-    .file-status.interrupted {
-      color: red; /* 失敗したダウンロードを赤色で表示 */
-    }
-    .file-details {
-      font-size: 0.8em;
-      color: #666;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .details-right {
-      display: flex;
-      align-items: center;
-      white-space: nowrap; /* ドメインと日時が改行されないように */
-    }
-    .file-time::before {
-      content: "•";
-      margin: 0 0.5em; /* 日時とドメインの間に区切り文字と余白を設ける */
-      color: #bbb;
-    }
-    #downloads-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      max-height: 400px; /* リストが長くなりすぎないようにスクロールバーを表示 */
-      overflow-y: auto;
-    }
-  </style>
+  <link rel="stylesheet" href="options.css">
+  <link rel="stylesheet" href="popup.css"> <!-- ポップアップ固有のスタイルを適用 -->
 </head>
 <body>
   <div class="header">
@@ -99,7 +13,10 @@
       <img src="icons/gear.svg" alt="Options">
     </button>
   </div>
-  <ul id="downloads-list"></ul>
+  <ul id="downloads-list">
+    <!-- ダウンロード履歴がここに動的に追加されます -->
+  </ul>
+  <div id="no-downloads-message" style="display: none;" data-i18n="noDownloadsMessage"></div>
   <script src="popup.js"></script>
 </body>
 </html>

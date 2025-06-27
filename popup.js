@@ -35,7 +35,7 @@ function formatBytes(bytes, decimals = 2) {
  * @returns {string} - フォーマットされた相対時間文字列。
  */
 function formatTimeAgo(isoString) {
-  const date = new Date(isoString);
+  const date = new Date(isoString); // ISO 8601形式の文字列からDateオブジェクトを作成
   const now = new Date();
   const seconds = Math.round((now - date) / 1000);
   const minutes = Math.round(seconds / 60);
@@ -43,7 +43,7 @@ function formatTimeAgo(isoString) {
   const days = Math.round(hours / 24);
 
   // ブラウザの国際化APIを使用して、ロケールに合わせた表示を生成
-  const rtf = new Intl.RelativeTimeFormat('ja', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(chrome.i18n.getUILanguage(), { numeric: 'auto' });
 
   if (seconds < 60) return rtf.format(-seconds, 'second');
   if (minutes < 60) return rtf.format(-minutes, 'minute');
@@ -166,14 +166,24 @@ function getDownloadsList() {
   chrome.downloads.search({limit: 20, orderBy: ['-startTime']}, function(items) {
       const list = document.getElementById('downloads-list');
       if (!list) return;
+      const noDownloadsMessage = document.getElementById('no-downloads-message');
+
       list.replaceChildren(); // より安全な方法でリストをクリア
 
-      items.forEach(item => {
-          const li = createDownloadListItem(item);
-          list.appendChild(li);
-      });
+      if (items.length === 0) {
+        noDownloadsMessage.style.display = 'block';
+      } else {
+        noDownloadsMessage.style.display = 'none';
+        items.forEach(item => {
+            const li = createDownloadListItem(item);
+            list.appendChild(li);
+        });
+      }
   });
 }
+
+// ダウンロードの状態が変更されたときにリストを更新
+chrome.downloads.onChanged.addListener(getDownloadsList);
 
 document.getElementById('show-options').addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
