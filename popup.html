@@ -35,6 +35,39 @@
       width: 24px;  /* アイコンを少し大きく */
       height: 24px; /* アイコンを少し大きく */
     }
+    #downloads-list li {
+      display: flex;
+      align-items: center;
+      padding: 8px 4px;
+      border-bottom: 1px solid #eee;
+    }
+    #downloads-list li:last-child {
+      border-bottom: none;
+    }
+    .file-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      flex-shrink: 0; /* アイコンが縮まないように */
+    }
+    .file-info {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      min-width: 0; /* flexアイテムの縮小を許可し、ellipsisを有効にする */
+    }
+    .file-name {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* はみ出したファイル名を...で表示 */
+    }
+    .file-details {
+      font-size: 0.8em;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+    }
     #downloads-list {
       list-style: none;
       padding: 0;
