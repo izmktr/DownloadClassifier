@@ -20,6 +20,7 @@
   "popupTitle": { "message": "ポップアップ" },
   "showOptions": { "message": "オプションを表示" },
   "newRule": { "message": "新規ルール" },
+  "unnamedRule": { "message": "名称未設定" },
   "test": { "message": "テスト" },
   "ruleNamePh": { "message": "例: example.com" },
   "sendFolderPh": { "message": "例: images (Dowonload/images/ に保存する場合)" },

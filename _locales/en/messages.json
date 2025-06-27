@@ -20,6 +20,7 @@
   "popupTitle": { "message": "Popup" },
   "showOptions": { "message": "Show Options" },
   "newRule": { "message": "New Rule" },
+  "unnamedRule": { "message": "(unnamed)" },
   "test": { "message": "Test" },
   "ruleNamePh": { "message": "e.g. example.com" },
   "sendFolderPh": { "message": "e.g. images (to save in Downloads/images/)" },

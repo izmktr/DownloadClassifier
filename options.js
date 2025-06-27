@@ -37,13 +37,13 @@ const UIManager = {
 
     const newOption = document.createElement('option');
     newOption.value = '-1';
-    newOption.textContent = '(新規)';
+    newOption.textContent = chrome.i18n.getMessage('newRule') || '(新規)';
     rulesListBox.appendChild(newOption);
 
     rules.forEach((rule, idx) => {
       const option = document.createElement('option');
       option.value = idx;
-      option.textContent = rule.name || '(名称未設定)';
+      option.textContent = rule.name || chrome.i18n.getMessage('unnamedRule') || '(名称未設定)';
       rulesListBox.appendChild(option);
     });
 
