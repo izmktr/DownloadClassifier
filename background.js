@@ -6,7 +6,6 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.downloads.onCreated.addListener((downloadItem) => {
-  console.log('新しいダウンロード:', downloadItem);
   // 履歴に追加する処理をこちらに移動
   chrome.storage.local.get({ history: [] }, (result) => {
     const history = result.history;
@@ -22,7 +21,6 @@ let cachedRules = [];
 function updateRulesCache() {
   chrome.storage.local.get(['rules'], (result) => {
     cachedRules = (result.rules || []).map(r => new DownloadRule(r));
-    console.log('loaded', cachedRules);
   });
 }
 
@@ -43,10 +41,8 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
     const filename = item.filename.split(/[\\/]/).pop();
     const newfilepath = `${matched.folder}/${filename}`;
     suggest({ filename: newfilepath });
-    console.log('rule match:', matched, item, newfilepath);
   } else {
     suggest();
-    console.log('rule unmatch:', item);
   }
   chrome.storage.local.get({ history: [] }, (result) => {
     const history = result.history;

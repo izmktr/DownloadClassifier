@@ -1,19 +1,3 @@
-// itemsはchrome.downloads.DownloadItem型の配列です。
-// DownloadItemの主なプロパティ例:
-// id: number - ダウンロードの一意なID
-// url: string - ダウンロード元のURL
-// filename: string - 保存先のファイルパス
-// state: string - 'in_progress', 'complete', 'interrupted' など
-// danger: string - 'safe', 'dangerous', 'accepted', 'uncommon', 'host', 'user_validated', 'user_validated'
-// startTime: string - ISO 8601形式の開始時刻
-// endTime: string - ISO 8601形式の終了時刻（完了時のみ）
-// fileSize: number - バイト単位のファイルサイズ
-// mime: string - MIMEタイプ
-// paused: boolean - 一時停止中かどうか
-// error: string - エラー内容（失敗時のみ）
-// byExtensionId: string - 拡張機能ID（拡張機能経由の場合）
-// byExtensionName: string - 拡張機能名（拡張機能経由の場合）
-
 /**
  * 残り時間を人間が読みやすい形式に変換します。
  * @param {number} seconds - 残り秒数。
@@ -113,7 +97,6 @@ function createDownloadListItem(item) {
     progressBar.style.width = `${percentage}%`;
     progressBar.classList.add('paused');
   }
-  console.log('item.state:', item.state, 'progressBarContainer:', progressBarContainer, 'progressBar:', progressBar);
 
   const detailsRight = document.createElement('span'); // 時間とドメイン表示用
   detailsRight.className = 'details-right';
@@ -144,9 +127,8 @@ function createDownloadListItem(item) {
 async function updateDownloadsView() {
   const downloadsList = document.getElementById('downloads-list');
   if (!downloadsList) return;
-  console.log('updateDownloadView called:', downloadsList);
 
-
+  // ダウンロードリストの要素を取得
   const noDownloadsMessage = document.getElementById('no-downloads-message');
 
   // chrome.storageからhistoryCountを取得
@@ -159,6 +141,7 @@ async function updateDownloadsView() {
   // リストをクリア
   downloadsList.replaceChildren(); 
 
+  // ダウンロードがない場合のメッセージを表示
   if (allRecentDownloads.length === 0) {
     noDownloadsMessage.style.display = 'block';
   } else {
