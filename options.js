@@ -323,6 +323,22 @@ const UIManager = {
       }
     });
   },
+
+  /**
+   * ルール操作ボタン（上へ、下へ、削除）の有効/無効状態を更新する
+   */
+  updateRuleButtonsState() {
+    const { moveUpRuleBtn, moveDownRuleBtn, deleteRuleBtn } = this.elements;
+    const selectedIndex = RuleManager.selectedIndex;
+    const rulesCount = RuleManager.rules.length;
+
+    // 「新規ルール」が選択されている場合、またはルールがない場合は全て無効
+    deleteRuleBtn.disabled = (selectedIndex === -1);
+    // 選択されているルールが最初の場合、または「新規ルール」の場合は上へ移動を無効
+    moveUpRuleBtn.disabled = (selectedIndex === -1 || selectedIndex === 0);
+    // 選択されているルールが最後の場合、または「新規ルール」の場合は下へ移動を無効
+    moveDownRuleBtn.disabled = (selectedIndex === -1 || selectedIndex === rulesCount - 1);
+  },
 };
 
 /**
@@ -405,6 +421,7 @@ const App = {
     UIManager.elements.historyCountInput.value = RuleManager.historyCount;
     this.updateRulesUI();
     await this.updateHistoryUI();
+    UIManager.updateRuleButtonsState(); // 初期状態のボタンを更新
     this.addEventListeners();
   },
 
@@ -424,6 +441,7 @@ const App = {
     const selectedRule = RuleManager.get(RuleManager.selectedIndex);
     UIManager.fillRuleDetail(selectedRule);
     UIManager.updateAddOrUpdateButtonLabel(RuleManager.selectedIndex === -1);
+    UIManager.updateRuleButtonsState(); // ルール選択・更新後にボタン状態を更新
   },
 
   async updateHistoryUI(hightlightRule = () => false) {
@@ -432,6 +450,7 @@ const App = {
       orderBy: ['-startTime']
     });
     UIManager.renderDownloadHistory(items, this.handleAddToRuleFromHistory.bind(this), hightlightRule);
+    // updateRuleButtonsStateはupdateRulesUIで呼ばれるため、ここでは不要
   },
 
   handleRuleSelect(e) {
@@ -462,6 +481,7 @@ const App = {
     await RuleManager.save();
     this.updateRulesUI();
     UIManager.elements.rulesListBox.focus();
+    // updateRuleButtonsStateはupdateRulesUIで呼ばれるため、ここでは不要
   },
 
   async handleDeleteRule() {
@@ -469,6 +489,7 @@ const App = {
       RuleManager.delete();
       await RuleManager.save();
       this.updateRulesUI();
+      UIManager.updateRuleButtonsState(); // 削除後にボタン状態を更新
       UIManager.elements.rulesListBox.focus();
     }
   },
@@ -477,6 +498,7 @@ const App = {
     RuleManager.moveUp();
     await RuleManager.save();
     this.updateRulesUI();
+    UIManager.updateRuleButtonsState(); // 移動後にボタン状態を更新
     UIManager.elements.rulesListBox.focus();
   },
 
@@ -484,6 +506,7 @@ const App = {
     RuleManager.moveDown();
     await RuleManager.save();
     this.updateRulesUI();
+    UIManager.updateRuleButtonsState(); // 移動後にボタン状態を更新
     UIManager.elements.rulesListBox.focus();
   },
   
@@ -516,8 +539,12 @@ const App = {
     const itemForRule = originalItem || latestItem;
 
     RuleManager.selectedIndex = -1;
+    // ルールリストの選択を視覚的に「(新規)」に更新
+    UIManager.elements.rulesListBox.selectedIndex = 0;
+
     UIManager.fillRuleFormFromHistory(itemForRule);
     UIManager.updateAddOrUpdateButtonLabel(true);
+    UIManager.updateRuleButtonsState(); // ルール操作ボタンを無効化
     UIManager.elements.ruleNameInput.focus();
   },
 
