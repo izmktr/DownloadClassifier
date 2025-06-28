@@ -424,24 +424,38 @@ const App = {
     UIManager.updateRuleButtonsState(); // 移動後にボタン状態を更新
     UIManager.elements.rulesListBox.focus();
   },
-  
+
+  /**
+   * ダウンロード履歴のアイテムをハイライト表示するための述語（predicate）関数を作成する。
+   * @param {DownloadRule} testRule - テスト対象のルール。
+   * @param {Array} onCreatedHistory - ダウンロード開始時に保存された履歴データ。
+   * @returns {function(object): boolean} - 履歴アイテムを受け取り、ハイライトすべきか判定する関数。
+   * @private
+   */
+  _createHighlightPredicate(testRule, onCreatedHistory) {
+    return (itemFromView) => {
+      // 表示されている履歴アイテムのIDを元に、ダウンロード開始時の情報を探す。
+      const originalItem = onCreatedHistory.find(h => h.id === itemFromView.id);
+
+      // ルール判定には、ダウンロード開始時の情報があればそれを優先して使用する。
+      // なければ、表示されている最新の情報でフォールバックする。
+      const itemToTest = originalItem || itemFromView;
+
+      return testRule.match(itemToTest);
+    };
+  },
+
   async handleTestRule() {
+    // 1. フォームからテスト用のルールを作成する
     const testRuleData = UIManager.getRuleDataFromForm();
     const testRule = new DownloadRule(testRuleData);
 
-    // ストレージからonCreated時の履歴データを事前に取得
-    const { history } = await chrome.storage.local.get({ history: [] });
+    // 2. テスト対象となる、ダウンロード開始時に保存された履歴データを取得する
+    const { history: onCreatedHistory } = await chrome.storage.local.get({ history: [] });
 
-    // ハイライト判定用の関数を定義
-    const hightlightRule = (latestItem) => {
-      // 表示用のlatestItemのIDを使って、ストレージから保存された元の情報を探す
-      const originalItem = history.find(item => item.id === latestItem.id);
-
-      // ルール判定には、originalItem（ダウンロード開始直後の情報）を優先して使用する
-      const itemToTest = originalItem || latestItem;
-      return testRule.match(itemToTest);
-    };
-    await this.updateHistoryUI(hightlightRule);
+    // 3. 履歴アイテムがテストルールにマッチするかを判定する関数を作成し、UIを更新する
+    const highlightPredicate = this._createHighlightPredicate(testRule, onCreatedHistory);
+    await this.updateHistoryUI(highlightPredicate);
   },
 
   async handleAddToRuleFromHistory(latestItem) {
