@@ -35,33 +35,42 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-  // onDeterminingFilenameで得られたより正確なMIMEタイプで履歴を更新
-  const matched = cachedRules.find(rule => rule.match(item));
-  if (matched && matched.folder) {
-    const filename = item.filename.split(/[\\/]/).pop();
-    const newfilepath = `${matched.folder}/${filename}`;
-    suggest({ filename: newfilepath });
-  } else {
-    suggest();
-  }
-  chrome.storage.local.get({ history: [] }, (result) => {
-    const history = result.history;
-    const historyItemIndex = history.findIndex(h => h.id === item.id);
-    if (historyItemIndex !== -1) {
-      const storedItem = history[historyItemIndex];
-      let needsUpdate = false;
+  // 非同期で suggest を呼び出すため、リスナーは true を返す必要がある。
+  // 即時実行非同期関数 (async IIFE) を使って処理を行う。
+  (async () => {
+    try {
+      // onDeterminingFilenameで得られたより正確な情報で履歴を更新
+      const result = await new Promise(resolve => chrome.storage.local.get({ history: [] }, resolve));
+      const history = result.history;
+      const historyItemIndex = history.findIndex(h => h.id === item.id);
+      if (historyItemIndex !== -1) {
+        const storedItem = history[historyItemIndex];
+        let needsUpdate = false;
 
-      // MIMEタイプが異なる、または元々空だった場合に更新
-      if (storedItem.mime !== item.mime) {
-        storedItem.mime = item.mime;
-        needsUpdate = true;
+        if (storedItem.mime !== item.mime) {
+          storedItem.mime = item.mime;
+          needsUpdate = true;
+        }
+        if (storedItem.filename !== item.filename) {
+          storedItem.filename = item.filename;
+          needsUpdate = true;
+        }
+        if (needsUpdate) await new Promise(resolve => chrome.storage.local.set({ history }, resolve));
       }
-      // ファイル名が異なる場合に更新
-      if (storedItem.filename !== item.filename) {
-        storedItem.filename = item.filename;
-        needsUpdate = true;
-      }
-      if (needsUpdate) chrome.storage.local.set({ history });
+    } catch (e) {
+      console.error('Error updating history in onDeterminingFilename:', e);
     }
-  });
+
+    // ルールに基づいてファイルパスを決定
+    const matched = cachedRules.find(rule => rule.match(item));
+    if (matched && matched.folder) {
+      const filename = item.filename.split(/[\\/]/).pop();
+      const newfilepath = `${matched.folder}/${filename}`;
+      suggest({ filename: newfilepath });
+    } else {
+      suggest(); // ルールにマッチしない場合はデフォルトの動作
+    }
+  })();
+
+  return true; // suggest() を非同期で呼び出すことを示す
 });
