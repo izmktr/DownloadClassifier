@@ -1,11 +1,27 @@
 // background.js
 importScripts('downloadRule.js');
 
+let isDebugLoggingEnabled = false;
+
+function updateDebugSettings() {
+  // デフォルト値は false
+  chrome.storage.local.get({ debugLoggingEnabled: false }, (result) => {
+    isDebugLoggingEnabled = result.debugLoggingEnabled;
+  });
+}
+
+function debugLog(...args) {
+  if (isDebugLoggingEnabled) {
+    console.log('[Debug]', ...args);
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log('DownloadClassifier 拡張機能がインストールされました');
 });
 
 chrome.downloads.onCreated.addListener((downloadItem) => {
+  debugLog('Download created:', downloadItem);
   // 履歴に追加する処理をこちらに移動
   chrome.storage.local.get({ history: [] }, (result) => {
     const history = result.history;
@@ -26,11 +42,19 @@ function updateRulesCache() {
 
 // 初回ロード時にキャッシュ
 updateRulesCache();
+updateDebugSettings();
 
 // ルールが変更されたらキャッシュを更新
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.rules) {
-    updateRulesCache();
+  if (area === 'local') {
+    if (changes.rules) {
+      debugLog('Rules changed, updating cache.');
+      updateRulesCache();
+    }
+    if (changes.debugLoggingEnabled) {
+      updateDebugSettings();
+      console.log('Debug logging setting changed to:', changes.debugLoggingEnabled.newValue);
+    }
   }
 });
 
