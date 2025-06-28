@@ -92,3 +92,16 @@ function searchDownloads(query) {
     chrome.downloads.search(query, resolve);
   });
 }
+
+/**
+ * ファイルパスから拡張子を除いたファイル名を取得します。
+ * @param {string} fullPath - ファイルのフルパス。
+ * @returns {string} - 拡張子なしのファイル名。
+ */
+function getFilenameWithoutExtension(fullPath) {
+  if (!fullPath) return '';
+  const filenameWithExt = fullPath.split(/[\\/]/).pop();
+  const lastDotIndex = filenameWithExt.lastIndexOf('.');
+  // ドットがない、またはファイル名の先頭にある場合(.bashrcなど)は、拡張子がないとみなします
+  return (lastDotIndex < 1) ? filenameWithExt : filenameWithExt.substring(0, lastDotIndex);
+}

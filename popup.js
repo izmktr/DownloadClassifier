@@ -21,12 +21,18 @@ function formatTimeRemaining(seconds) {
  * @param {chrome.downloads.DownloadItem} item - ダウンロードアイテム。
  * @returns {HTMLLIElement} - 生成されたリストアイテム要素。
  */
-function createDownloadListItem(item) {
+function createDownloadListItem(item, isRelated = false) {
   const li = document.createElement('li');
   li.dataset.downloadId = item.id;
   li.addEventListener('click', () => {
     chrome.downloads.show(item.id);
   });
+
+  // 関連ファイルの場合、背景色を変更し、ツールチップを設定する
+  if (isRelated) {
+    li.style.backgroundColor = '#ffebee'; // 薄い赤色
+    li.title = chrome.i18n.getMessage('relatedFileTooltip') || 'このページのタイトルに関連するファイルです';
+  }
 
   const icon = document.createElement('img');
   icon.className = 'file-icon';
@@ -124,33 +130,66 @@ function createDownloadListItem(item) {
   return li;
 }
 
+/**
+ * ポップアップのダウンロード履歴ビューを更新します。
+ * 現在のタブに関連するファイルを優先的に表示します。
+ */
 async function updateDownloadsView() {
   const downloadsList = document.getElementById('downloads-list');
   if (!downloadsList) return;
-
-  // ダウンロードリストの要素を取得
   const noDownloadsMessage = document.getElementById('no-downloads-message');
 
-  // chrome.storageからhistoryCountを取得
+  // 1. 現在のタブ情報を取得
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabTitle = activeTab ? activeTab.title : '';
+
+  let relatedFiles = [];
+  let relatedFileIds = new Set();
+
+  // 2. タブのタイトルがあれば関連ファイルを探す
+  if (tabTitle) {
+    const completedDownloads = await searchDownloads({
+      limit: 1000, // 検索対象を十分に確保
+      state: 'complete',
+      orderBy: ['-startTime']
+    });
+
+    const matchedFiles = completedDownloads.filter(item => {
+      const filenameWithoutExt = getFilenameWithoutExtension(item.filename);
+      return filenameWithoutExt && tabTitle.includes(filenameWithoutExt);
+    });
+
+    // ファイル名（拡張子なし）の長さで降順ソート
+    matchedFiles.sort((a, b) => {
+      const aName = getFilenameWithoutExtension(a.filename);
+      const bName = getFilenameWithoutExtension(b.filename);
+      return bName.length - aName.length;
+    });
+
+    // 上位3件を取得
+    relatedFiles = matchedFiles.slice(0, 3);
+    relatedFileIds = new Set(relatedFiles.map(f => f.id));
+  }
+
+  // 3. 通常表示用の履歴を取得
   const storageData = await chrome.storage.local.get({ historyCount: 20 });
   const displayLimit = storageData.historyCount;
+  const recentDownloads = await searchDownloads({ limit: displayLimit, orderBy: ['-startTime'] });
 
-  // すべての最近のダウンロード（進行中を含む）を取得
-  const allRecentDownloads = await searchDownloads({ limit: displayLimit, orderBy: ['-startTime'] });
+  // 4. 通常履歴から関連ファイルを除外して重複をなくす
+  const uniqueRecentDownloads = recentDownloads.filter(item => !relatedFileIds.has(item.id));
 
-  // リストをクリア
-  downloadsList.replaceChildren(); 
+  downloadsList.replaceChildren();
 
-  // ダウンロードがない場合のメッセージを表示
-  if (allRecentDownloads.length === 0) {
+  // 5. 関連ファイルをリストの先頭に追加
+  relatedFiles.forEach(item => downloadsList.appendChild(createDownloadListItem(item, true)));
+  // 6. 残りの履歴を追加
+  uniqueRecentDownloads.forEach(item => downloadsList.appendChild(createDownloadListItem(item, false)));
+
+  if (downloadsList.children.length === 0) {
     noDownloadsMessage.style.display = 'block';
   } else {
     noDownloadsMessage.style.display = 'none';
-    // すべてのダウンロードアイテムをdownloadsListに追加
-    allRecentDownloads.forEach(item => {
-      const li = createDownloadListItem(item);
-      downloadsList.appendChild(li);
-    });
   }
 }
 

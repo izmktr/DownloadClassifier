@@ -1,5 +1,6 @@
 // background.js
 importScripts('downloadRule.js');
+importScripts('common.js');
 
 let isDebugLoggingEnabled = false;
 
@@ -97,4 +98,42 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   })();
 
   return true; // suggest() を非同期で呼び出すことを示す
+});
+
+// タブが更新されたときに呼び出されるリスナー
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  // タイトルが変更され、確定した瞬間にのみ処理を実行
+  if (changeInfo.title) {
+    debugLog('Tab title changed:', { tabId: tabId, newTitle: changeInfo.title });
+
+    // タイトルが汎用的なものであればスキップ
+    if (changeInfo.title === 'New Tab' || changeInfo.title === '新しいタブ' || changeInfo.title.trim() === '') {
+      debugLog('Tab title is generic or empty, skipping.');
+      return;
+    }
+
+    try {
+      // 1. 過去1000件の完了したダウンロード履歴を取得します
+      const downloadedItems = await searchDownloads({
+        limit: 1000,
+        state: 'complete',
+        orderBy: ['-startTime']
+      });
+
+      if (!downloadedItems) return;
+
+      // 2. タブのタイトルにファイル名（拡張子なし）が含まれるファイルを探します
+      const matchedFiles = downloadedItems.filter(item => {
+        const filenameWithoutExt = getFilenameWithoutExtension(item.filename);
+        // 拡張子なしのファイル名が存在し、かつタブのタイトルに含まれているかチェック
+        return filenameWithoutExt && changeInfo.title.includes(filenameWithoutExt);
+      });
+
+      if (matchedFiles.length > 0) {
+        debugLog('Found matched files in tab title:', { title: changeInfo.title, matches: matchedFiles });
+      }
+    } catch (e) {
+      console.error('Error processing tab update:', e);
+    }
+  }
 });
