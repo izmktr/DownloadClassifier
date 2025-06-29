@@ -6,11 +6,20 @@ body {
   line-height: 1.6; /* Improve readability */
 }
 
-.page-title {
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   max-width: 800px; /* フォームの最大幅と合わせる */
-  margin: 0 auto 1em auto; /* 中央寄せと下部のマージン */
-  color: #333;
+  margin: 0 auto 1.5em auto; /* 中央寄せと下部のマージン */
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 1em;
   padding-top: 0.5em; /* 上部に少し余白を追加 */
+}
+
+.page-title {
+  margin: 0; /* 親の.headerでマージンを管理 */
+  color: #333;
   font-size: 1.8em; /* タイトルを見やすく */
 }
 
@@ -83,6 +92,28 @@ select#rulesListBox {
 /* Rule list controls container */
 .rule-list-controls {
   margin-top: 8px;
+}
+
+/* Help button (in header) */
+.help-icon-button {
+  background-color: #007bff; /* デフォルトで青色に */
+  color: white; /* アイコンの色を白に */
+  border: none; /* ボーダーをなくす */
+  padding: 8px; /* 少し大きくして押しやすくする */
+  cursor: pointer;
+  border-radius: 50%; /* 円形にする */
+  transition: background-color 0.2s ease;
+}
+
+.help-icon-button:hover {
+  background-color: #0056b3; /* ホバーで濃い青に */
+}
+
+.help-icon-button img {
+  filter: brightness(0) invert(1); /* アイコンを白にする */
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
 }
 
 /* Icon buttons for rule list */

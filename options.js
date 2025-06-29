@@ -23,6 +23,7 @@ const UIManager = {
     downloadHistory: document.getElementById('downloadHistory'),
     historyCountInput: document.getElementById('historyCountInput'),
     changeHistoryCountBtn: document.getElementById('changeHistoryCountBtn'),
+    helpBtn: document.getElementById('helpBtn'),
   },
 
   /**
@@ -349,6 +350,7 @@ const App = {
     elements.moveDownRuleBtn.addEventListener('click', this.handleMoveRuleDown.bind(this));
     elements.testRuleBtn.addEventListener('click', this.handleTestRule.bind(this));
     elements.changeHistoryCountBtn.addEventListener('click', this.handleChangeHistoryCount.bind(this));
+    elements.helpBtn.addEventListener('click', this.handleHelpClick.bind(this));
   },
 
   updateRulesUI() {
@@ -484,6 +486,12 @@ const App = {
       await chrome.storage.local.set({ historyCount: value });
       await this.updateHistoryUI();
     }
+  },
+
+  handleHelpClick() {
+    const lang = chrome.i18n.getUILanguage();
+    const manualFile = lang.startsWith('ja') ? 'manual_ja.html' : 'manual_en.html';
+    chrome.tabs.create({ url: chrome.runtime.getURL(manualFile) });
   },
 };
 
