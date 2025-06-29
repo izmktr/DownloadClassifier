@@ -20,18 +20,6 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('DownloadClassifier 拡張機能がインストールされました');
 });
 
-chrome.downloads.onCreated.addListener((downloadItem) => {
-  debugLog('Download created:', downloadItem);
-  // 履歴に追加する処理をこちらに移動
-  chrome.storage.local.get({ history: [] }, (result) => {
-    const history = result.history;
-    // downloadItemには完全な情報が含まれている
-    history.unshift(downloadItem);
-    if (history.length > 100) history.length = 100;
-    chrome.storage.local.set({ history });
-  });
-});
-
 let cachedRules = [];
 
 function updateRulesCache() {
@@ -64,23 +52,12 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   (async () => {
     try {
       // onDeterminingFilenameで得られたより正確な情報で履歴を更新
-      const result = await new Promise(resolve => chrome.storage.local.get({ history: [] }, resolve));
-      const history = result.history;
-      const historyItemIndex = history.findIndex(h => h.id === item.id);
-      if (historyItemIndex !== -1) {
-        const storedItem = history[historyItemIndex];
-        let needsUpdate = false;
-
-        if (storedItem.mime !== item.mime) {
-          storedItem.mime = item.mime;
-          needsUpdate = true;
-        }
-        if (storedItem.filename !== item.filename) {
-          storedItem.filename = item.filename;
-          needsUpdate = true;
-        }
-        if (needsUpdate) await new Promise(resolve => chrome.storage.local.set({ history }, resolve));
+      const { history } = await chrome.storage.local.get({ history: [] });
+      history.unshift(item); // 配列の先頭に新しいアイテムを追加
+      if (history.length > 100) { // 履歴が100件を超えたら古いものから削除
+        history.length = 100;
       }
+      await chrome.storage.local.set({ history });
     } catch (e) {
       console.error('Error updating history in onDeterminingFilename:', e);
     }
