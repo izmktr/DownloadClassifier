@@ -133,6 +133,7 @@ function createDownloadListItem(item, isRelated = false) {
 /**
  * ポップアップのダウンロード履歴ビューを更新します。
  * 現在のタブに関連するファイルを優先的に表示します。
+ * 関連ファイル検索結果はセッションストレージにキャッシュされます。
  */
 async function updateDownloadsView() {
   const downloadsList = document.getElementById('downloads-list');
@@ -141,60 +142,86 @@ async function updateDownloadsView() {
 
   // 1. 現在のタブ情報を取得
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabTitle = activeTab ? activeTab.title : '';
+  if (!activeTab) { // タブが取得できない場合は何もしない
+    noDownloadsMessage.style.display = 'block';
+    return;
+  }
+  const tabTitle = activeTab.title || '';
+  const tabId = activeTab.id;
+  const cacheKey = `related_files_${tabId}`;
 
   let relatedFiles = [];
   let relatedFileIds = new Set();
 
-  // 2. タブのタイトルがあれば関連ファイルを探す
-  if (tabTitle) {
+  // 2. セッションキャッシュを確認
+  const cachedData = await chrome.storage.session.get(cacheKey);
+  // キャッシュが存在し、タブタイトルが変更されていない場合、キャッシュを使用
+  if (cachedData[cacheKey] && cachedData[cacheKey].tabTitle === tabTitle) {
+    relatedFiles = cachedData[cacheKey].files;
+    relatedFileIds = new Set(relatedFiles.map(f => f.id));
+  } else if (tabTitle) {
+    // 3. キャッシュがない、またはタブタイトルが変更された場合、関連ファイルを検索
     const completedDownloads = await searchDownloads({
-      limit: 1000, // 検索対象を十分に確保
+      limit: 1000, // 確実に1000件検索
       state: 'complete',
       orderBy: ['-startTime']
     });
 
     const matchedFiles = completedDownloads.filter(item => {
       const filenameWithoutExt = getFilenameWithoutExtension(item.filename);
-      return filenameWithoutExt && tabTitle.includes(filenameWithoutExt);
+      // 短すぎるファイル名や無関係なマッチを防ぐ
+      if (!filenameWithoutExt || filenameWithoutExt.length < 3) {
+        return false;
+      }
+      // 大文字・小文字を区別せずに比較
+      return tabTitle.toLowerCase().includes(filenameWithoutExt.toLowerCase());
     });
-
-    // ファイル名（拡張子なし）の長さで降順ソート
+ 
+    // ファイル名（拡張子なし）の長さで降順ソートし、関連性の高いものを優先
     matchedFiles.sort((a, b) => {
       const aName = getFilenameWithoutExtension(a.filename);
       const bName = getFilenameWithoutExtension(b.filename);
       return bName.length - aName.length;
     });
-
-    // 上位3件を取得
+ 
+    // 上位3件を関連ファイルとする
     relatedFiles = matchedFiles.slice(0, 3);
     relatedFileIds = new Set(relatedFiles.map(f => f.id));
-  }
 
-  // 3. 通常表示用の履歴を取得
+    // 検索結果をキャッシュに保存
+    await chrome.storage.session.set({
+      [cacheKey]: {
+        tabTitle: tabTitle,
+        files: relatedFiles
+      }
+    });
+  }
+ 
+  // 4. 通常表示用の履歴を取得
   const storageData = await chrome.storage.local.get({ historyCount: 20 });
   const displayLimit = storageData.historyCount;
   const recentDownloads = await searchDownloads({ limit: displayLimit, orderBy: ['-startTime'] });
-
-  // 4. 通常履歴から関連ファイルを除外して重複をなくす
+ 
+  // 5. 通常履歴から関連ファイルを除外して重複をなくす
   const uniqueRecentDownloads = recentDownloads.filter(item => !relatedFileIds.has(item.id));
-
+ 
   downloadsList.replaceChildren();
-
-  // 5. 関連ファイルをリストの先頭に追加
+ 
+  // 6. 関連ファイルをリストの先頭に追加
   relatedFiles.forEach(item => downloadsList.appendChild(createDownloadListItem(item, true)));
-  // 6. 残りの履歴を追加
+  // 7. 残りの履歴を追加
   uniqueRecentDownloads.forEach(item => downloadsList.appendChild(createDownloadListItem(item, false)));
-
+ 
   if (downloadsList.children.length === 0) {
     noDownloadsMessage.style.display = 'block';
   } else {
     noDownloadsMessage.style.display = 'none';
   }
 }
-
+ 
 // ダウンロードの状態が変更されたときにリストを更新
-chrome.downloads.onChanged.addListener(updateDownloadsView);
+// 方針に基づき、ポップアップを開いた時の静的な表示とするため、onChangedリスナーは無効化します。
+// chrome.downloads.onChanged.addListener(updateDownloadsView);
 
 document.getElementById('show-options').addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
