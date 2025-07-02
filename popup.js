@@ -219,10 +219,15 @@ async function updateDownloadsView() {
   }
 }
  
-// ダウンロードの状態が変更されたときにリストを更新
-// 方針に基づき、ポップアップを開いた時の静的な表示とするため、onChangedリスナーは無効化します。
-// chrome.downloads.onChanged.addListener(updateDownloadsView);
-
+/**
+ * ダウンロードの開始時（ファイル名決定時）と状態変化時（完了、中断など）にリストを更新します。
+ * これにより、ダウンロード中の進捗更新による頻繁な再描画を避けます。
+ */
+chrome.downloads.onChanged.addListener((downloadDelta) => {
+  if (downloadDelta.filename || downloadDelta.state) {
+    updateDownloadsView();
+  }
+});
 document.getElementById('show-options').addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
 });
