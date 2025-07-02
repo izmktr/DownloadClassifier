@@ -4,7 +4,9 @@
   "description": "このChrome拡張機能は、ダウンロードファイルをルールに基づいて自動分類します。",
   "main": "background.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js",
+    "package": "node build.js zip"
   },
   "repository": {
     "type": "git",
