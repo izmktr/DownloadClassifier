@@ -1,0 +1,66 @@
+ストア公開用パッケージ自動生成手順
+====================================
+
+この手順書は、開発用のソースコードからストア公開用のクリーンな配布パッケージ（.zip）を自動的に生成するためのセットアップ方法と使い方を説明します。
+
+## 目的
+
+*   開発中にのみ使用するファイル（`debug.html`, `debug.js`など）を配布物から除外する。
+*   JavaScriptやCSSから不要なコメント、空白、`console.log`などを削除し、ファイルを圧縮（軽量化）する。
+*   `options.html`に含まれるデバッグ用のリンクを自動で削除する。
+*   `package.json`のバージョン番号を`manifest.json`に自動で反映させる。
+*   上記すべてをコマンド一つで実行し、ストア申請用の`extension.zip`ファイルを生成する。
+
+## 1. セットアップ（初回のみ）
+
+### Step 1: 開発ツールのインストール
+
+プロジェクトのルートディレクトリ（`d:\gitproject\DownloadClassifier\`）でコマンドプロンプトを開き、以下のコマンドを実行します。
+
+```bash
+# 1. package.json ファイルを生成します（もし既にあれば不要）
+npm init -y
+
+# 2. ビルドに必要なツールをすべてインストールします
+npm install --save-dev fs-extra terser archiver clean-css
+```
+
+### Step 2: ビルドスクリプトの作成
+
+プロジェクトのルートに `build.js` という名前で、提供されたビルドスクリプトのコードを貼り付けて保存します。
+（`d:\gitproject\DownloadClassifier\build.js`）
+
+### Step 3: package.json の編集
+
+`package.json` を開き、`"scripts"` セクションを以下のように編集（または追加）します。
+
+```json
+"scripts": {
+  "build": "node build.js",
+  "package": "node build.js zip"
+},
+```
+
+また、`description` や `version` が正しく設定されていることを確認してください。ビルドスクリプトはこれらの値を参照します。
+
+## 2. 使い方
+
+セットアップ完了後、以下のコマンドを使用できます。
+
+### A) 公開用ファイルの生成 (distフォルダ)
+
+ストア公開用のクリーンなファイル一式を `dist` フォルダに生成します。（ZIP化はしません）
+
+```bash
+npm run build
+```
+
+### B) ストア申請用ZIPファイルの作成
+
+ビルド処理を実行し、`dist` フォルダの中身を `extension.zip` というファイルに圧縮します。
+ストアにはこの `extension.zip` をアップロードします。
+
+```bash
+npm run package
+```
+
