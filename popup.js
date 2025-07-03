@@ -133,16 +133,16 @@ function createDownloadListItem(item, isRelated = false) {
 /**
  * ポップアップのダウンロード履歴ビューを更新します。
  * 現在のタブに関連するファイルを優先的に表示します。
- * 関連ファイル検索結果はセッションストレージにキャッシュされます。
+ * 関連ファイル検索結果は、ダウンロード状況に応じて更新されるキャッシュを利用します。
  */
 async function updateDownloadsView() {
   const downloadsList = document.getElementById('downloads-list');
   if (!downloadsList) return;
   const noDownloadsMessage = document.getElementById('no-downloads-message');
 
-  // 1. 現在のタブ情報を取得
+  // 1. 現在のタブ情報と、バックグラウンドで保存された最新の完了ダウンロードIDを取得
   const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!activeTab) { // タブが取得できない場合は何もしない
+  if (!activeTab) {
     noDownloadsMessage.style.display = 'block';
     return;
   }
@@ -150,19 +150,24 @@ async function updateDownloadsView() {
   const tabId = activeTab.id;
   const cacheKey = `related_files_${tabId}`;
 
+  const storageSessionData = await chrome.storage.session.get([cacheKey, 'latestCompletedDownloadId']);
+  const latestCompletedDownloadId = storageSessionData.latestCompletedDownloadId;
+  const cachedData = storageSessionData[cacheKey];
+
   let relatedFiles = [];
   let relatedFileIds = new Set();
 
-  // 2. セッションキャッシュを確認
-  const cachedData = await chrome.storage.session.get(cacheKey);
-  // キャッシュが存在し、タブタイトルが変更されていない場合、キャッシュを使用
-  if (cachedData[cacheKey] && cachedData[cacheKey].tabTitle === tabTitle) {
-    relatedFiles = cachedData[cacheKey].files;
+  // 2. キャッシュの有効性を確認
+  // キャッシュが存在し、タブタイトルが同じで、かつ最新のダウンロードIDも同じ場合、キャッシュを使用
+  if (cachedData &&
+      cachedData.tabTitle === tabTitle &&
+      cachedData.latestDownloadId === latestCompletedDownloadId) {
+    relatedFiles = cachedData.files;
     relatedFileIds = new Set(relatedFiles.map(f => f.id));
   } else if (tabTitle) {
-    // 3. キャッシュがない、またはタブタイトルが変更された場合、関連ファイルを検索
+    // 3. キャッシュが無効な場合、関連ファイルを再検索
     const completedDownloads = await searchDownloads({
-      limit: 1000, // 確実に1000件検索
+      limit: 1000,
       state: 'complete',
       orderBy: ['-startTime']
     });
@@ -188,11 +193,13 @@ async function updateDownloadsView() {
     relatedFiles = matchedFiles.slice(0, 3);
     relatedFileIds = new Set(relatedFiles.map(f => f.id));
 
-    // 検索結果をキャッシュに保存
+    // 検索結果を新しいキャッシュとして保存
+    // このキャッシュが作られた時点での最新完了IDも一緒に保存
     await chrome.storage.session.set({
       [cacheKey]: {
         tabTitle: tabTitle,
-        files: relatedFiles
+        files: relatedFiles,
+        latestDownloadId: latestCompletedDownloadId
       }
     });
   }
