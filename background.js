@@ -46,6 +46,15 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
+// ダウンロード状態の変更を監視し、完了したらセッションストレージにIDを保存
+chrome.downloads.onChanged.addListener((delta) => {
+  // stateが 'complete' になった時だけ処理
+  if (delta.state && delta.state.current === 'complete') {
+    debugLog(`Download ${delta.id} completed. Storing ID to session storage.`);
+    chrome.storage.session.set({ latestCompletedDownloadId: delta.id });
+  }
+});
+
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
   // 非同期で suggest を呼び出すため、リスナーは true を返す必要がある。
   // 即時実行非同期関数 (async IIFE) を使って処理を行う。
