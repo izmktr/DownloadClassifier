@@ -150,6 +150,28 @@ async function updateDownloadsView() {
   const tabId = activeTab.id;
   const cacheKey = `related_files_${tabId}`;
 
+  // コンテンツスクリプトを実行してページ内のリンクを取得
+  let pageLinks = new Set();
+  try {
+    const injectionResults = await chrome.scripting.executeScript({
+      target: { tabId: activeTab.id },
+      func: () => {
+        // ページ上のすべての<a>タグからhref属性を収集し、絶対URLのセットを返す
+        const links = Array.from(document.querySelectorAll('a[href]'))
+                           .map(a => a.href) // a.hrefは自動的に絶対URLを返す
+                           .filter(href => href.startsWith('http:') || href.startsWith('https:') || href.startsWith('ftp:'));
+        return Array.from(new Set(links));
+      }
+    });
+    // executeScriptは結果の配列を返す
+    if (injectionResults && injectionResults[0] && injectionResults[0].result) {
+      pageLinks = new Set(injectionResults[0].result);
+    }
+  } catch (e) {
+    console.warn(`Could not execute content script on tab ${activeTab.id}: ${e.message}`);
+    // 権限がないページ(chrome://など)では失敗するが、処理は続行する
+  }
+
   const storageSessionData = await chrome.storage.session.get([cacheKey, 'latestCompletedDownloadId']);
   const latestCompletedDownloadId = storageSessionData.latestCompletedDownloadId;
   const cachedData = storageSessionData[cacheKey];
@@ -172,25 +194,73 @@ async function updateDownloadsView() {
       orderBy: ['-startTime']
     });
 
-    const matchedFiles = completedDownloads.filter(item => {
-      const filenameWithoutExt = getFilenameWithoutExtension(item.filename);
-      // 短すぎるファイル名や無関係なマッチを防ぐ
-      if (!filenameWithoutExt || filenameWithoutExt.length < 3) {
-        return false;
-      }
-      // 大文字・小文字を区別せずに比較
-      return tabTitle.toLowerCase().includes(filenameWithoutExt.toLowerCase());
-    });
- 
-    // ファイル名（拡張子なし）の長さで降順ソートし、関連性の高いものを優先
-    matchedFiles.sort((a, b) => {
-      const aName = getFilenameWithoutExtension(a.filename);
-      const bName = getFilenameWithoutExtension(b.filename);
-      return bName.length - aName.length;
-    });
- 
-    // 上位3件を関連ファイルとする
-    relatedFiles = matchedFiles.slice(0, 3);
+    let tabOrigin = '';
+    try {
+      // blob: URLの場合、元のオリジンを抽出する
+      const urlForOrigin = activeTab.url.startsWith('blob:') ? activeTab.url.substring(5) : activeTab.url;
+      tabOrigin = new URL(urlForOrigin).origin;
+    } catch (e) {
+      // about:blank, chrome:// などのURLでは失敗するが、無視して問題ない
+    }
+
+    /**
+     * 文字列を正規化し、意味のあるトークン（単語）に分割します。
+     * @param {string} text - 入力文字列
+     * @returns {Set<string>} - 3文字以上のトークンのセット
+     */
+    const getTokens = (text) => {
+      if (!text) return new Set();
+      // 小文字化し、一般的な区切り文字で分割。3文字未満のトークンはノイズになりやすいため除外。
+      return new Set(
+        text.toLowerCase()
+            .split(/[\s\-_\[\]().,]+/) // スペース、ハイフン、アンダースコア、括弧、ドット、カンマなどで分割
+            .filter(token => token.length >= 3)
+      );
+    };
+
+    const titleTokens = getTokens(tabTitle);
+
+    if (titleTokens.size > 0 || tabOrigin) {
+      const scoredFiles = completedDownloads.map(item => {
+        let score = 0;
+
+        // --- スコアリング基準1: ファイル名とタブタイトルのトークン一致 ---
+        const filenameWithoutExt = getFilenameWithoutExtension(item.filename);
+        const fileTokens = getTokens(filenameWithoutExt);
+        if (titleTokens.size > 0 && fileTokens.size > 0) {
+          const commonTokens = new Set([...titleTokens].filter(token => fileTokens.has(token)));
+          if (commonTokens.size > 0) {
+            const matchCountScore = commonTokens.size;
+            const matchLengthScore = [...commonTokens].reduce((acc, token) => acc + token.length, 0);
+            score += matchCountScore * 10 + matchLengthScore;
+          }
+        }
+
+        // --- スコアリング基準2: ページ内リンクとダウンロード元URLの一致 ---
+        if (pageLinks.size > 0 && item.url && pageLinks.has(item.url)) {
+          score += 100; // ページ内に直接リンクがあれば非常に高いスコア
+        }
+
+        // --- スコアリング基準3: ダウンロード元URL(href)のオリジン一致 ---
+        if (tabOrigin && item.url) {
+          try {
+            const itemOrigin = new URL(item.url).origin;
+            if (tabOrigin === itemOrigin) {
+              score += 10; // オリジンが一致したらボーナススコア
+            }
+          } catch (e) {
+            // item.urlが不正な形式の場合（例: data: URL）は無視
+          }
+        }
+
+        return { item, score };
+      }).filter(scored => scored.score > 0);
+
+      // スコアの高い順にソートし、上位3件を関連ファイルとする
+      scoredFiles.sort((a, b) => b.score - a.score);
+      relatedFiles = scoredFiles.slice(0, 3).map(scored => scored.item);
+    }
+
     relatedFileIds = new Set(relatedFiles.map(f => f.id));
 
     // 検索結果を新しいキャッシュとして保存
