@@ -121,6 +121,22 @@
       絶対パス (例: <code>C:\Users\...</code> や <code>/Users/...</code>) を指定することはできません。
     </div>
     <div class="note">
+      <strong>ヒント: 日付/時刻でフォルダを自動作成</strong><br>
+      「保存先フォルダ」に特別な文字列（プレースホルダー）を含めることで、ダウンロードした日時にもとづいてフォルダを自動的に作成できます。<br>
+      例: <code>images/%Y-%m-%d</code> と指定すると、2023年10月27日にダウンロードしたファイルは <code>images/2023-10-27</code> フォルダに保存されます。<br>
+      利用可能なプレースホルダーは以下の通りです。
+      <ul>
+        <li><code>%Y</code>: 4桁の年 (例: <code>2023</code>)</li>
+        <li><code>%y</code>: 2桁の年 (例: <code>23</code>)</li>
+        <li><code>%m</code>: 2桁の月 (例: <code>10</code>)</li>
+        <li><code>%d</code>: 2桁の日 (例: <code>27</code>)</li>
+        <li><code>%H</code>: 24時間表記の時 (例: <code>09</code>)</li>
+        <li><code>%M</code>: 分 (例: <code>05</code>)</li>
+        <li><code>%S</code>: 秒 (例: <code>03</code>)</li>
+      </ul>
+    </div>
+
+    <div class="note">
       <strong>ヒント: パターンでのワイルドカード</strong><br>
       URL、ファイル名、MIMEタイプのパターンでは、ワイルドカードが使用できます。
       <ul>

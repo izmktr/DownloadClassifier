@@ -54,15 +54,16 @@
       display: inline-block;
       vertical-align: middle;
       padding: 4px;
-      border: 1px solid #ccc;
+      border: none;
       border-radius: 4px;
-      background-color: #f0f0f0;
+      background-color: #007bff;
       line-height: 1;
     }
     .icon-button-like img {
       width: 1.1em;
       height: 1.1em;
       vertical-align: middle;
+      filter: brightness(0) invert(1);
     }
     .note {
       background-color: #fff9c4;
@@ -117,6 +118,21 @@
       Due to Chrome's security policy, files can only be moved to folders <strong>within Chrome's default download folder</strong>.<br>
       For example, if you enter <code>images</code> in the Destination Folder, files will be saved to `(Your Default Download Folder)/images/`.<br>
       You cannot specify absolute paths (e.g., <code>C:\Users\...</code> or <code>/Users/...</code>).
+    </div>
+    <div class="note">
+      <strong>Tip: Automatically Create Folders by Date/Time</strong><br>
+      You can automatically create folders based on the download date and time by including special placeholders in the "Destination Folder" field.<br>
+      For example, if you specify <code>images/%Y-%m-%d</code>, a file downloaded on October 27, 2023, will be saved to the <code>images/2023-10-27</code> folder.<br>
+      Available placeholders are:
+      <ul>
+        <li><code>%Y</code>: 4-digit year (e.g., <code>2023</code>)</li>
+        <li><code>%y</code>: 2-digit year (e.g., <code>23</code>)</li>
+        <li><code>%m</code>: 2-digit month (e.g., <code>10</code>)</li>
+        <li><code>%d</code>: 2-digit day (e.g., <code>27</code>)</li>
+        <li><code>%H</code>: 24-hour (e.g., <code>09</code>)</li>
+        <li><code>%M</code>: Minute (e.g., <code>05</code>)</li>
+        <li><code>%S</code>: Second (e.g., <code>03</code>)</li>
+      </ul>
     </div>
     <div class="note">
       <strong>Tip: Using Wildcards in Patterns</strong><br>
