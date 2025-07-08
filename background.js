@@ -16,6 +16,33 @@ function debugLog(...args) {
   }
 }
 
+/**
+ * Dateオブジェクトをstrftime形式の文字列でフォーマットする
+ * @param {string} format - フォーマット文字列 (%Y, %m, %dなど)
+ * @param {Date} [date=new Date()] - フォーマットするDateオブジェクト
+ * @returns {string} フォーマットされた文字列
+ */
+function strftime(format, date = new Date()) {
+  const zeroPad = (num) => String(num).padStart(2, '0');
+  // %% を % に、%Yなどを日付の値に、それ以外の%?はそのまま出力する
+  return format.replace(/%%|%./g, (match) => {
+    switch (match) {
+      case '%%': return '%';
+      case '%Y': return date.getFullYear();
+      case '%y': return String(date.getFullYear()).slice(-2);
+      case '%m': return zeroPad(date.getMonth() + 1);
+      case '%d': return zeroPad(date.getDate());
+      case '%H': return zeroPad(date.getHours());
+      case '%M': return zeroPad(date.getMinutes());
+      case '%S': return zeroPad(date.getSeconds());
+      default:
+        // サポートされていないフォーマット指定子は、警告を出してそのまま返す
+        debugLog(`Unsupported strftime format specifier: "${match}"`);
+        return match;
+    }
+  });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log('DownloadClassifier 拡張機能がインストールされました');
 });
@@ -74,9 +101,15 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
     // ルールに基づいてファイルパスを決定
     const matched = cachedRules.find(rule => rule.match(item));
     if (matched && matched.folder) {
+      // プレースホルダーを展開してフォルダパスを生成
+      const downloadDate = new Date(item.startTime);
+      const formattedFolder = strftime(matched.folder, downloadDate);
+
       const filename = item.filename.split(/[\\/]/).pop();
-      const newfilepath = `${matched.folder}/${filename}`;
-      suggest({ filename: newfilepath });
+      const newfilepath = `${formattedFolder}/${filename}`;
+
+      debugLog(`Rule matched for "${item.filename}". Suggesting new path: "${newfilepath}"`);
+      suggest({ filename: newfilepath, conflictAction: 'uniquify' });
     } else {
       suggest(); // ルールにマッチしない場合はデフォルトの動作
     }
