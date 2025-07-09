@@ -103,6 +103,7 @@ select#rulesListBox {
   cursor: pointer;
   border-radius: 50%; /* 円形にする */
   transition: background-color 0.2s ease;
+  margin-bottom: 0px;
 }
 
 .help-icon-button:hover {
