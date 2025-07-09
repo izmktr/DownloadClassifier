@@ -33,5 +33,6 @@
   "urlPatternInvalid": { "message": "Invalid URL pattern format." },
   "debugLink": { "message": "Debug" },
   "ruleOrderNote": { "message": "Rules are applied in order from top to bottom." },
-  "changeHistoryCountButton": { "message": "Change History Count" }
+  "changeHistoryCountButton": { "message": "Change History Count" },
+  "showHelp": { "message": "Show Help" }
 }

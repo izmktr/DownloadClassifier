@@ -235,9 +235,6 @@ chrome.downloads.onChanged.addListener((downloadDelta) => {
     updateDownloadsView();
   }
 });
-document.getElementById('show-options').addEventListener('click', () => {
-  chrome.runtime.openOptionsPage();
-});
 
 // 多言語化: message.jsonの値でUIテキストを置換
 function localizeHtml() {
@@ -265,8 +262,29 @@ function localizeTitle() {
   }
 }
 
+/**
+ * ヘルプページを開きます。
+ */
+function openHelpPage() {
+  const lang = chrome.i18n.getUILanguage();
+  const manualFile = lang.startsWith('ja') ? 'manual_ja.html' : 'manual_en.html';
+  chrome.tabs.create({ url: chrome.runtime.getURL(manualFile) });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   localizeHtml();
   localizeTitle();
   updateDownloadsView();
+
+  const optionsBtn = document.getElementById('show-options');
+  if (optionsBtn) {
+    optionsBtn.addEventListener('click', () => {
+      chrome.runtime.openOptionsPage();
+    });
+  }
+
+  const helpBtn = document.getElementById('show-help');
+  if (helpBtn) {
+    helpBtn.addEventListener('click', openHelpPage);
+  }
 });

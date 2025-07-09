@@ -12,6 +12,11 @@ body {
 h1 {
   margin: 0; /* h1のデフォルトマージンをリセット */
 }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* アイコン間の隙間を調整 */
+}
 .icon-button {
   background: none;
   border: none;
