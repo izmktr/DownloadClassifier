@@ -1,6 +1,6 @@
 {
   "name": "downloadclassifier",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "このChrome拡張機能は、ダウンロードファイルをルールに基づいて自動分類します。",
   "main": "background.js",
   "scripts": {
