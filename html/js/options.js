@@ -490,7 +490,7 @@ const App = {
 
   handleHelpClick() {
     const lang = chrome.i18n.getUILanguage();
-    const manualFile = lang.startsWith('ja') ? 'manual_ja.html' : 'manual_en.html';
+    const manualFile = lang.startsWith('ja') ? 'html/manual_ja.html' : 'html/manual_en.html';
     chrome.tabs.create({ url: chrome.runtime.getURL(manualFile) });
   },
 };

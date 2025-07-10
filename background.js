@@ -1,5 +1,5 @@
 // background.js
-importScripts('downloadRule.js');
+importScripts('html/js/downloadRule.js');
 
 let isDebugLoggingEnabled = false;
 
