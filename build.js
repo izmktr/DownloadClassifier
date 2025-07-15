@@ -13,10 +13,11 @@ const zipPath = path.join(__dirname, 'extension.zip');
 // debug.js や debug.html など、開発用のファイルはここには含めません
 // CSSとJSは個別に処理するため、ここには含めません。
 const filesToCopy = [
-  'popup.html',
-  'options.html',
-  'manual_ja.html',
-  'manual_en.html',
+  'html/popup.html',
+  'html/options.html',
+  'html/manual_ja.html',
+  'html/manual_en.html',
+  'html/icons',
   'icons',
   '_locales'
 ];
@@ -24,16 +25,16 @@ const filesToCopy = [
 // Minify (圧縮) するJavaScriptファイルのリスト
 const jsFilesToMinify = [
   'background.js',
-  'common.js',
-  'downloadRule.js',
-  'options.js',
-  'popup.js'
+  'js/downloadRule.js',
+  'html/js/common.js',
+  'html/js/options.js',
+  'html/js/popup.js'
 ];
 
 // Minify (圧縮) するCSSファイルのリスト
 const cssFilesToMinify = [
-  'options.css',
-  'popup.css'
+  'html/css/options.css',
+  'html/css/popup.css'
 ];
 
 /**
@@ -73,6 +74,7 @@ async function build() {
     console.log('Minifying JavaScript files...');
     for (const file of jsFilesToMinify) {
       const filePath = path.join(srcDir, file);
+      const destPath = path.join(distDir, file);
       const code = await fs.readFile(filePath, 'utf8');
       const result = await minify(code, {
         compress: {
@@ -82,7 +84,9 @@ async function build() {
       });
       if (result.error) throw result.error;
       
-      await fs.writeFile(path.join(distDir, file), result.code);
+      // 出力先のディレクトリを確実に作成
+      await fs.ensureDir(path.dirname(destPath));
+      await fs.writeFile(destPath, result.code);
       console.log(`  - Minified: ${file}`);
     }
 
@@ -95,6 +99,8 @@ async function build() {
         if (await fs.pathExists(srcPath)) {
             const code = await fs.readFile(srcPath, 'utf8');
             const output = cleanCss.minify(code);
+            // 出力先のディレクトリを確実に作成
+            await fs.ensureDir(path.dirname(destPath));
             await fs.writeFile(destPath, output.styles);
             console.log(`  - Minified: ${file}`);
         }
@@ -102,7 +108,7 @@ async function build() {
 
     // 6. HTMLファイルからデバッグ用の要素を削除
     console.log('Processing HTML files...');
-    const optionsHtmlPath = path.join(distDir, 'options.html');
+    const optionsHtmlPath = path.join(distDir, 'html/options.html');
     if (await fs.pathExists(optionsHtmlPath)) {
         let content = await fs.readFile(optionsHtmlPath, 'utf8');
         // debug.htmlへのリンクを含むコンテナを丸ごと削除
