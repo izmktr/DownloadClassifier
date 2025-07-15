@@ -1,4 +1,23 @@
 /**
+ * ファイル名から拡張子を除去し、連番（括弧付き数字）も除去します
+ * 例: "document (1).pdf" -> "document"
+ * @param {string} filename - ファイル名
+ * @returns {string} - 拡張子と連番を除去したファイル名
+ */
+function getFilenameWithoutExtensionAndNumber(filename) {
+  if (!filename) return '';
+  const nameWithoutExt = getFilenameWithoutExtension(filename); // 拡張子を除去
+  // 連番パターン（括弧付き数字）を除去: " (1)", " (2)", " (10)" など
+  return nameWithoutExt.replace(/\s*\(\d+\)\s*$/, '').trim();
+}
+
+function getFilenameWithoutExtension(filename) {
+  const name = filename.split(/\\|\//).pop(); // パス区切りで最後の部分を取得
+  const nameWithoutExt = name.replace(/\.[^.]*$/, ''); // 拡張子を除去
+  return nameWithoutExt;
+}
+
+/*
  * 残り時間を人間が読みやすい形式に変換します。
  * @param {number} seconds - 残り秒数。
  * @returns {string} - フォーマットされた残り時間文字列。
@@ -173,19 +192,22 @@ async function updateDownloadsView() {
     });
 
     const matchedFiles = completedDownloads.filter(item => {
-      const filenameWithoutExt = getFilenameWithoutExtension(item.filename);
+      const filenameWithoutExt = getFilenameWithoutExtensionAndNumber(item.filename);
       // 短すぎるファイル名や無関係なマッチを防ぐ
       if (!filenameWithoutExt || filenameWithoutExt.length < 3) {
         return false;
       }
+      // タブタイトルも連番を除去して比較
+      const cleanTabTitle = tabTitle.replace(/\s*\(\d+\)\s*$/, '');
       // 大文字・小文字を区別せずに比較
-      return tabTitle.toLowerCase().includes(filenameWithoutExt.toLowerCase());
+      return cleanTabTitle.toLowerCase().includes(filenameWithoutExt.toLowerCase()) ||
+             filenameWithoutExt.toLowerCase().includes(cleanTabTitle.toLowerCase());
     });
  
     // ファイル名（拡張子なし）の長さで降順ソートし、関連性の高いものを優先
     matchedFiles.sort((a, b) => {
-      const aName = getFilenameWithoutExtension(a.filename);
-      const bName = getFilenameWithoutExtension(b.filename);
+      const aName = a.filename;
+      const bName = b.filename;
       return bName.length - aName.length;
     });
  
