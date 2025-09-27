@@ -94,6 +94,77 @@ select#rulesListBox {
   margin-top: 8px;
 }
 
+/* インポート・エクスポートボタンのスタイル */
+.import-export-controls {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.import-export-controls button {
+  padding: 6px 12px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.import-export-controls button:hover {
+  background: #45a049;
+}
+
+#exportRulesBtn {
+  background: #2196F3;
+}
+
+#exportRulesBtn:hover {
+  background: #1976D2;
+}
+
+#importRulesBtn {
+  background: #FF9800;
+}
+
+#importRulesBtn:hover {
+  background: #F57C00;
+}
+
+/* ステータスメッセージのスタイル */
+.status-message {
+  padding: 10px 16px;
+  margin: 16px 0;
+  border-radius: 4px;
+  font-weight: bold;
+  animation: slideDown 0.3s ease-out;
+}
+
+.status-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Help button (in header) */
 .help-icon-button {
   background-color: #007bff; /* デフォルトで青色に */

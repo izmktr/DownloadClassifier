@@ -351,6 +351,13 @@ const App = {
     elements.testRuleBtn.addEventListener('click', this.handleTestRule.bind(this));
     elements.changeHistoryCountBtn.addEventListener('click', this.handleChangeHistoryCount.bind(this));
     elements.helpBtn.addEventListener('click', this.handleHelpClick.bind(this));
+    
+    // エクスポート・インポート機能のイベントリスナーを追加
+    document.getElementById('exportRulesBtn').addEventListener('click', this.handleExportRules.bind(this));
+    document.getElementById('importRulesBtn').addEventListener('click', () => {
+      document.getElementById('importFileInput').click();
+    });
+    document.getElementById('importFileInput').addEventListener('change', this.handleImportRules.bind(this));
   },
 
   updateRulesUI() {
@@ -492,6 +499,166 @@ const App = {
     const lang = chrome.i18n.getUILanguage();
     const manualFile = lang.startsWith('ja') ? 'html/manual_ja.html' : 'html/manual_en.html';
     chrome.tabs.create({ url: chrome.runtime.getURL(manualFile) });
+  },
+
+  // ルールをエクスポートする
+  handleExportRules() {
+    const rules = RuleManager.rules;
+    
+    // エクスポートデータの作成
+    const exportData = {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
+      rulesCount: rules.length,
+      rules: rules
+    };
+    
+    // JSONファイルとしてダウンロード
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+      type: 'application/json' 
+    });
+    const url = URL.createObjectURL(blob);
+    
+    // ダウンロード用のリンクを作成
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = `DownloadClassifier_rules_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    // オブジェクトURLを解放
+    URL.revokeObjectURL(url);
+    
+    // 成功メッセージを表示
+    this.showStatusMessage(chrome.i18n.getMessage('exportSuccess') || `${rules.length}件のルールをエクスポートしました`);
+  },
+
+  // ルールをインポートする
+  async handleImportRules(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // ファイル拡張子チェック
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      this.showStatusMessage(chrome.i18n.getMessage('importErrorFormat') || 'JSONファイルを選択してください', 'error');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const importData = JSON.parse(e.target.result);
+        
+        // データ形式の検証
+        if (!this.validateImportData(importData)) {
+          this.showStatusMessage(chrome.i18n.getMessage('importErrorInvalidFormat') || '無効なファイル形式です', 'error');
+          return;
+        }
+        
+        const importRules = importData.rules || [];
+        if (importRules.length === 0) {
+          this.showStatusMessage(chrome.i18n.getMessage('importErrorNoRules') || 'インポートするルールが見つかりません', 'error');
+          return;
+        }
+        
+        // 現在のルールを取得して追記
+        const currentRules = RuleManager.rules;
+        
+        // 重複チェック（ルール名で判定）
+        const existingNames = new Set(currentRules.map(rule => rule.name));
+        const newRules = importRules.filter(rule => !existingNames.has(rule.name));
+        const duplicateCount = importRules.length - newRules.length;
+        
+        // 新しいルールを追記
+        RuleManager.rules = [...currentRules, ...newRules];
+        
+        // ストレージに保存
+        await RuleManager.save();
+        
+        // UIを更新
+        this.updateRulesUI();
+        
+        // 結果メッセージを表示
+        let message = chrome.i18n.getMessage('importSuccess') || `${newRules.length}件のルールをインポートしました`;
+        if (duplicateCount > 0) {
+          message += chrome.i18n.getMessage('importDuplicateSkipped') || ` (${duplicateCount}件は重複のためスキップ)`;
+        }
+        this.showStatusMessage(message);
+        
+      } catch (error) {
+        console.error('Import error:', error);
+        this.showStatusMessage(chrome.i18n.getMessage('importErrorParse') || 'ファイルの読み込みに失敗しました', 'error');
+      }
+    };
+    
+    reader.readAsText(file);
+    // ファイル入力をリセット
+    event.target.value = '';
+  },
+
+  // インポートデータの検証
+  validateImportData(data) {
+    // 基本構造の確認
+    if (typeof data !== 'object' || data === null) {
+      return false;
+    }
+    
+    // rulesプロパティの確認
+    if (!Array.isArray(data.rules)) {
+      return false;
+    }
+    
+    // 各ルールの形式確認
+    for (const rule of data.rules) {
+      if (typeof rule !== 'object' || rule === null) {
+        return false;
+      }
+      
+      // 必須プロパティの確認
+      if (typeof rule.name !== 'string' || 
+          typeof rule.folder !== 'string') {
+        return false;
+      }
+      
+      // オプションプロパティの型確認
+      if (rule.urlPattern !== undefined && typeof rule.urlPattern !== 'string') {
+        return false;
+      }
+      if (rule.filePattern !== undefined && typeof rule.filePattern !== 'string') {
+        return false;
+      }
+      if (rule.mimePattern !== undefined && typeof rule.mimePattern !== 'string') {
+        return false;
+      }
+    }
+    
+    return true;
+  },
+
+  // ステータスメッセージを表示する
+  showStatusMessage(message, type = 'success') {
+    // 既存のステータスメッセージを削除
+    const existingStatus = document.querySelector('.status-message');
+    if (existingStatus) {
+      existingStatus.remove();
+    }
+    
+    // 新しいステータスメッセージを作成
+    const statusDiv = document.createElement('div');
+    statusDiv.className = `status-message ${type}`;
+    statusDiv.textContent = message;
+    
+    // ヘッダーの下に挿入
+    const header = document.querySelector('.header');
+    header.insertAdjacentElement('afterend', statusDiv);
+    
+    // 3秒後に自動削除
+    setTimeout(() => {
+      if (statusDiv.parentNode) {
+        statusDiv.remove();
+      }
+    }, 3000);
   },
 };
 

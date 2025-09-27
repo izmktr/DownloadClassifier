@@ -34,5 +34,15 @@
   "debugLink": { "message": "debug画面" },
   "ruleOrderNote": { "message": "ルールは上から順に適用されます。" },
   "changeHistoryCountButton": { "message": "履歴件数変更" },
-  "showHelp": { "message": "ヘルプを表示" }
+  "showHelp": { "message": "ヘルプを表示" },
+  "exportRules": { "message": "エクスポート" },
+  "importRules": { "message": "インポート" },
+  "exportSuccess": { "message": "ルールをエクスポートしました" },
+  "importSuccess": { "message": "ルールをインポートしました" },
+  "importErrorFormat": { "message": "JSONファイルを選択してください" },
+  "importErrorInvalidFormat": { "message": "無効なファイル形式です" },
+  "importErrorNoRules": { "message": "インポートするルールが見つかりません" },
+  "importErrorSave": { "message": "ルールの保存に失敗しました" },
+  "importErrorParse": { "message": "ファイルの読み込みに失敗しました" },
+  "importDuplicateSkipped": { "message": "件は重複のためスキップされました" }
 }

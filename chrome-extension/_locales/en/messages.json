@@ -34,5 +34,15 @@
   "debugLink": { "message": "Debug" },
   "ruleOrderNote": { "message": "Rules are applied in order from top to bottom." },
   "changeHistoryCountButton": { "message": "Change History Count" },
-  "showHelp": { "message": "Show Help" }
+  "showHelp": { "message": "Show Help" },
+  "exportRules": { "message": "Export" },
+  "importRules": { "message": "Import" },
+  "exportSuccess": { "message": "Rules exported successfully" },
+  "importSuccess": { "message": "Rules imported successfully" },
+  "importErrorFormat": { "message": "Please select a JSON file" },
+  "importErrorInvalidFormat": { "message": "Invalid file format" },
+  "importErrorNoRules": { "message": "No rules found to import" },
+  "importErrorSave": { "message": "Failed to save rules" },
+  "importErrorParse": { "message": "Failed to read file" },
+  "importDuplicateSkipped": { "message": "items were skipped due to duplication" }
 }
