@@ -15,24 +15,21 @@
 
 ### Step 1: 開発ツールのインストール
 
-プロジェクトのルートディレクトリ（`d:\gitproject\DownloadClassifier\`）でコマンドプロンプトを開き、以下のコマンドを実行します。
+`chrome-extension` ディレクトリでターミナルを開き、以下のコマンドを実行します。
 
-```bash
-# 1. package.json ファイルを生成します（もし既にあれば不要）
-npm init -y
-
-# 2. ビルドに必要なツールをすべてインストールします
-npm install --save-dev fs-extra terser archiver clean-css
+```powershell
+cd D:\gitproject\DownloadClassifier\chrome-extension
+npm ci
 ```
 
-### Step 2: ビルドスクリプトの作成
+### Step 2: ビルドスクリプトの確認
 
-プロジェクトのルートに `build.js` という名前で、提供されたビルドスクリプトのコードを貼り付けて保存します。
-（`d:\gitproject\DownloadClassifier\build.js`）
+ビルドスクリプト `build.js` は `chrome-extension` ディレクトリに用意されています。
+新たに作成したり、コードを貼り付けたりする必要はありません。
 
-### Step 3: package.json の編集
+### Step 3: package.json の確認
 
-`package.json` を開き、`"scripts"` セクションを以下のように編集（または追加）します。
+同じディレクトリの `package.json` には、ビルド用のコマンドが設定されています。
 
 ```json
 "scripts": {
@@ -41,11 +38,11 @@ npm install --save-dev fs-extra terser archiver clean-css
 },
 ```
 
-また、`description` や `version` が正しく設定されていることを確認してください。ビルドスクリプトはこれらの値を参照します。
+`description` や `version` が正しく設定されていることを確認してください。ビルドスクリプトはこれらの値を参照します。
 
 ## 2. 使い方
 
-セットアップ完了後、以下のコマンドを使用できます。
+セットアップ完了後、`chrome-extension` ディレクトリで以下のコマンドを使用できます。
 
 ### A) 公開用ファイルの生成 (distフォルダ)
 
@@ -63,4 +60,6 @@ npm run build
 ```bash
 npm run package
 ```
+
+`dist` フォルダと `extension.zip` は、ビルド時に作り直されます。
 
