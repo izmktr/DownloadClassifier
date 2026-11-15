@@ -70,7 +70,7 @@ async function build() {
       }
     }
 
-    // 4. JavaScriptファイルをminifyし、console.logを削除
+    // 4. JavaScriptファイルをminifyし、警告とエラー以外のログを削除
     console.log('Minifying JavaScript files...');
     for (const file of jsFilesToMinify) {
       const filePath = path.join(srcDir, file);
@@ -78,7 +78,7 @@ async function build() {
       const code = await fs.readFile(filePath, 'utf8');
       const result = await minify(code, {
         compress: {
-          drop_console: true, // このオプションがconsole.*の呼び出しを削除します
+          drop_console: ['log', 'info', 'debug'],
         },
         mangle: true, // 変数名を短縮します
       });

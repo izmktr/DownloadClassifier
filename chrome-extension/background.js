@@ -83,8 +83,7 @@ chrome.downloads.onChanged.addListener((delta) => {
 });
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-  // 非同期で suggest を呼び出すため、リスナーは true を返す必要がある。
-  // 即時実行非同期関数 (async IIFE) を使って処理を行う。
+  // 履歴保存の遅延や失敗でファイル名の決定を待たせない。
   (async () => {
     try {
       // onDeterminingFilenameで得られたより正確な情報で履歴を更新
@@ -97,23 +96,39 @@ chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
     } catch (e) {
       console.error('Error updating history in onDeterminingFilename:', e);
     }
-
-    // ルールに基づいてファイルパスを決定
-    const matched = cachedRules.find(rule => rule.match(item));
-    if (matched && matched.folder) {
-      // プレースホルダーを展開してフォルダパスを生成
-      const downloadDate = new Date(item.startTime);
-      const formattedFolder = strftime(matched.folder, downloadDate);
-
-      const filename = item.filename.split(/[\\/]/).pop();
-      const newfilepath = `${formattedFolder}/${filename}`;
-
-      debugLog(`Rule matched for "${item.filename}". Suggesting new path: "${newfilepath}"`);
-      suggest({ filename: newfilepath, conflictAction: 'uniquify' });
-    } else {
-      suggest(); // ルールにマッチしない場合はデフォルトの動作
-    }
   })();
 
-  return true; // suggest() を非同期で呼び出すことを示す
+  let suggestion;
+  try {
+    // 別の拡張機能が開始したダウンロードの保存先は変更しない。
+    if (item.byExtensionId && item.byExtensionId !== chrome.runtime.id) {
+      debugLog(`Download ${item.id} was started by another extension. Keeping its filename.`);
+    } else {
+      const matched = cachedRules.find(rule => rule.match(item));
+      if (matched && matched.folder) {
+        // プレースホルダーを展開してフォルダパスを生成
+        const downloadDate = new Date(item.startTime);
+        const formattedFolder = strftime(matched.folder, downloadDate);
+
+        const filename = item.filename.split(/[\\/]/).pop();
+        const newfilepath = `${formattedFolder}/${filename}`;
+
+        debugLog(`Rule matched for "${item.filename}". Suggesting new path: "${newfilepath}"`);
+        suggestion = { filename: newfilepath, conflictAction: 'uniquify' };
+      }
+    }
+  } catch (e) {
+    console.error(`Error determining filename for download ${item.id}. Using the default filename:`, e);
+  }
+
+  // suggest() は失敗時も再試行せず、ダウンロードごとに一度だけ呼ぶ。
+  try {
+    if (suggestion) {
+      suggest(suggestion);
+    } else {
+      suggest();
+    }
+  } catch (e) {
+    console.error(`Error suggesting filename for download ${item.id}:`, e);
+  }
 });
